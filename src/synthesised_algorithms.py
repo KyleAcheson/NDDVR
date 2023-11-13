@@ -198,6 +198,56 @@ def algorithm_100_2D(x, y, v, mass_x, mass_y, neig):
     return energies, wf
 
 
+def algorithm_29_2D(x, y, v, mass_x, mass_y, neig):
+
+    Nx = len(x)
+    Ny = len(y)
+    dx = x[1] - x[0]
+    dy = y[1] - y[0]
+    Lx = x[-1] - x[0]
+    Ly = y[-1] - y[0]
+
+    H_x = np.zeros((Nx, Nx))
+    H_y = np.zeros((Ny, Ny))
+
+    a = np.i0(np.sin(1) + 4)
+    for i in range(Nx):
+        i_prime = i
+        H_x[i, i_prime] = Lx**2 * ((2 * v[i, i_prime]) * (3 + 2**(a)) + (np.pi * (Lx + 3 + np.pi)))
+        if i > 0:
+            i_prime = i - 1
+            H_x[i, i_prime] = Lx ** 2 * ((-1) ** (i + 1 - i_prime + 1) * (((3 * np.pi) * (x[i] - x[i_prime]) ** 4) + 3 + 2 ** (a)) + (
+                (np.pi * Lx) * (x[i] - x[i_prime]) ** 4)) * (x[i] - x[i_prime]) ** (-2)
+        if i < Nx - 1:
+            i_prime = i + 1
+            H_x[i, i_prime] = Lx ** 2 * ((-1) ** (i + 1 - i_prime + 1) * (((3 * np.pi) * (x[i] - x[i_prime]) ** 4) + 3 + 2 ** (a)) + (
+                    (np.pi * Lx) * (x[i] - x[i_prime]) ** 4)) * (x[i] - x[i_prime]) ** (-2)
+
+    a = np.i0(np.sin(1) + 4)
+    for j in range(Ny):
+        j_prime = j
+        H_y[j, j_prime] = Ly**2 * ((2 * v[j, j_prime]) * (3 + 2**(a)) + (np.pi * (Ly + 3 + np.pi)))
+        if j > 0:
+            j_prime = j - 1
+            H_y[j, j_prime] = Ly ** 2 * ((-1) ** (j + 1 - j_prime + 1) * (((3 * np.pi) * (y[j] - y[j_prime]) ** 4) + 3 + 2 ** (a)) + (
+                    (np.pi * Ly) * (y[j] - y[j_prime]) ** 4)) * (y[j] - y[j_prime]) ** (-2)
+
+        if j < Ny - 1:
+            j_prime = j + 1
+            H_y[j, j_prime] = Ly ** 2 * ((-1) ** (j + 1 - j_prime + 1) * (((3 * np.pi) * (y[j] - y[j_prime]) ** 4) + 3 + 2 ** (a)) + (
+                    (np.pi * Ly) * (y[j] - y[j_prime]) ** 4)) * (y[j] - y[j_prime]) ** (-2)
+
+    Hx = np.kron(H_x, np.eye(Ny))
+    Hy = np.kron(np.eye(Nx), H_y)
+    H = Hx + Hy
+    eigval, eigvec = np.linalg.eigh(H)
+
+    wf = wfu.normalise_wf2(eigvec, x, y, neig)
+    energies = wfu.evaluate_energies_2d(wf, x, y, v, neig)
+
+    return energies, wf
+
+
 def algorithm_29(x, v, mass, neig):
 
     ngrid = len(x)
@@ -268,5 +318,7 @@ if __name__ == "__main__":
     energies, wf = algorithm_100_2D(x, y, v, mass_x, mass_y, neig)
     print(energies)
     energies, wf = algorithm_36_2D(x, y, v, mass_x, mass_y, neig)
+    print(energies)
+    energies, wf = algorithm_29_2D(x, y, v, mass_x, mass_y, neig)
     print(energies)
 
