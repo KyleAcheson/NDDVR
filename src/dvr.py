@@ -28,7 +28,7 @@ def cm_dvr(x, v, mass, neig):
 
     return c[neig, :], E[:neig], H
 
-def cm_dvr_2d(x, y, v, hbar=1.0, mx=1.0, my=1.0):
+def cm_dvr_2d(x, y, v, neig, hbar=1.0, mx=1.0, my=1.0):
 
     xmin, xmax = np.min(x), np.max(x)
     ymin, ymax = np.min(y), np.max(y)
@@ -71,7 +71,7 @@ def cm_dvr_2d(x, y, v, hbar=1.0, mx=1.0, my=1.0):
     return energies[:neig], wfs[:, :neig], H
 
 
-def cm_dvr_3d(x, y, z, v, hbar=1.0, mx=1.0, my=1.0, mz=1.0):
+def cm_dvr_3d(x, y, z, v, neig, hbar=1.0, mx=1.0, my=1.0, mz=1.0):
     xmin, xmax = np.min(x), np.max(x)
     ymin, ymax = np.min(y), np.max(y)
     zmin, zmax = np.min(z), np.max(z)
@@ -172,7 +172,7 @@ if __name__ == "__main__":
             for k in range(Nz):
                 v[i, j, k] = potf.harmonic_potential_3d(x[i], y[j], z[k])
 
-    energies, wfs, H = cm_dvr_3d(x, y, z, v)
+    energies, wfs, H = cm_dvr_3d(x, y, z, v, neig)
     print(energies[:neig]) # energies for 3D oscillator
     wfs = wfs.reshape(Nx, Ny, Nz, neig)
 

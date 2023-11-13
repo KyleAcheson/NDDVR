@@ -2,13 +2,12 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 
-def plot_wavefunctions_2d(x, y, eigenvectors, eigenvalues, num_to_plot=3, save=False):
+def plot_wavefunctions_2d(x, y, eigenvectors, eigenvalues, num_to_plot=3, fname=None, show=False):
     for i in range(num_to_plot):
         wf = eigenvectors[:, :, i]
-        if i == 0:
-            wf *= -1
+
         wf_min, wf_max = np.min(wf[:]), np.max(wf[:])
-        if wf_min < 0:
+        if wf_min < 0 and wf_max > 0:
             if wf_max >= wf_min:
                 lim = wf_max
             else:
@@ -17,7 +16,7 @@ def plot_wavefunctions_2d(x, y, eigenvectors, eigenvalues, num_to_plot=3, save=F
             norm = mpl.colors.TwoSlopeNorm(vmin=-1*lim, vmax=lim, vcenter=0)
         else:
             cm = 'Reds'
-            norm = mpl.colors.Normalize(vmin=0, vmax=wf_max)
+            norm = mpl.colors.Normalize(vmin=wf_min, vmax=wf_max)
 
         # Plot the surface and contour on the same axis
         fig = plt.figure(figsize=(8, 6))
@@ -46,13 +45,14 @@ def plot_wavefunctions_2d(x, y, eigenvectors, eigenvalues, num_to_plot=3, save=F
 
         ax.set_title(f'$\psi {i}$ ($E$ = {eigenvalues[i]:.2f})')
 
-        if save:
-            fig.savefig(f'TEST2D_HO_neig{i}.png')
-        else:
+        if fname:
+            fout = f'{fname}_neig{i}.png'
+            fig.savefig(fout)
+        elif show:
             fig.show()
 
 
-def plot_wavefunctions_3d(x, y, z, eigenvectors, eigenvals, num_to_plot=3, save=False):
+def plot_wavefunctions_3d(x, y, z, eigenvectors, eigenvals, num_to_plot=3, fname=None, show=False):
     for i in range(num_to_plot):
         wf = eigenvectors[:, :, :, i]
         x_mesh, y_mesh, z_mesh = np.meshgrid(x, y, z, indexing='ij')
@@ -90,7 +90,8 @@ def plot_wavefunctions_3d(x, y, z, eigenvectors, eigenvals, num_to_plot=3, save=
         ax.zaxis._axinfo["grid"].update({"linewidth": 0})
         fig.colorbar(scat, ax=ax, shrink=0.5, aspect=10)
 
-        if save:
-            fig.savefig(f'3D_H0_neig{i}.png')
-        else:
+        if fname:
+            fout = f'{fname}_neig{i}.png'
+            fig.savefig(fout)
+        elif show:
             fig.show()
