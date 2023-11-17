@@ -28,6 +28,41 @@ def cm_dvr(x, v, mass, neig):
 
     return c[neig, :], E[:neig], H
 
+
+def cm_dvr_2db(x, y, v, neig, hbar=1.0, mx=1.0, my=1.0):
+
+    xmin, xmax = np.min(x), np.max(x)
+    ymin, ymax = np.min(y), np.max(y)
+    Nx = len(x)
+    Ny = len(y)
+    dx = x[1] - x[0]
+    dy = y[1] - y[0]
+
+    H = np.zeros((Nx*Ny, Nx*Ny))
+
+    for i in range(Nx):
+        for j in range(Ny):
+            n = i * Ny + j
+            H[n, m_new] += ((hbar ** 2) * np.pi ** 2) / (6 * my * dy ** 2)
+            for m in range(Nx):
+                for l in range(Ny):
+                    m_new = m * Ny + l
+                    if i == m and j == l:
+                        H[n, m_new] += ((hbar ** 2) * np.pi ** 2) / (6 * mx * dx ** 2)
+                        H[n, m_new] += ((hbar ** 2) * np.pi ** 2) / (6 * my * dy ** 2)
+                        H[n, m_new] += v[m, l]
+                    elif i == m and j != l:
+                        H[n, m_new] = ((hbar ** 2) * (-1.0) ** (j - l)) / (my * dy ** 2 * (j - l) ** 2)
+                    elif i != m and j == l:
+                        H[n, m_new] = ((hbar ** 2) * (-1.0) ** (i - m)) / (mx * dx ** 2 * (i - m) ** 2)
+
+    energies, wfs = np.linalg.eigh(H)
+
+    return energies[:neig], wfs[:, :neig], H
+
+
+
+
 def cm_dvr_2d(x, y, v, neig, hbar=1.0, mx=1.0, my=1.0):
 
     xmin, xmax = np.min(x), np.max(x)
@@ -63,7 +98,6 @@ def cm_dvr_2d(x, y, v, neig, hbar=1.0, mx=1.0, my=1.0):
     Tx = np.kron(T_x, np.eye(Ny))
     Ty = np.kron(np.eye(Nx), T_y)
     T = Tx + Ty
-
     H = T + V
 
     energies, wfs = np.linalg.eigh(H)

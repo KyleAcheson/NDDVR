@@ -38,40 +38,39 @@ def algorithm_36_2D(x, y, v, mass_x, mass_y, neig):
     Lx = x[-1] - x[0]
     Ly = y[-1] - y[0]
 
-    H_x = np.zeros((Nx, Nx))
-    H_y = np.zeros((Ny, Ny))
+    H = np.zeros((Nx*Ny, Nx*Ny))
 
     a = np.pi / (3 * mass_x)
+    ay = np.pi / (3 * mass_y)
+
     for i in range(Nx):
-        i_prime = i
-        H_x[i, i_prime] = - 3*mass_x * (1/8) * (mass_x*((4*Lx) - (np.pi*np.tanh(a))) - 4*v[i, i_prime] + 4*np.pi)
-        if i > 0:
-            i_prime = i - 1
-            H_x[i, i_prime] = ((-3 * mass_x) * (np.exp(0.5*(x[i] - x[i_prime])**2) * np.tanh(np.pi))) / (4 * dx * np.abs(x[i] - x[i_prime]))
-        if i < Nx - 1:
-            i_prime = i + 1
-            H_x[i, i_prime] = ((-3 * mass_x) * (np.exp(0.5*(x[i] - x[i_prime])**2) * np.tanh(np.pi))) / (4 * dx * np.abs(x[i] - x[i_prime]))
+        for j in range(Ny):
+            n = i * Ny + j
+            for m in range(Nx):
+                for l in range(Ny):
+                    m_new = m * Ny + l
+                    if i == m and j == l:
+                        H[n, m_new] += -3*mass_x * (1/8) * (mass_x*((4*Lx) - (np.pi*np.tanh(a))) - 4*v[m, l] + 4*np.pi)
+                        H[n, m_new] += -3*mass_y * (1/8) * (mass_y*((4*Ly) - (np.pi*np.tanh(ay))) - 4*v[m, l] + 4*np.pi)
+                        #H[n, m_new] = v[m, l]
+                    elif (l == j + 1 and i == m):
+                        H[n, m_new] = ((-3 * mass_y) * (
+                                np.exp(0.5 * (y[j] - y[l]) ** 2) * np.tanh(np.pi))) / (
+                                                  4 * dy * np.abs(y[j] - y[l]))
+                        H[m_new, n] = ((-3 * mass_y) * (
+                                np.exp(0.5 * (y[l] - y[j]) ** 2) * np.tanh(np.pi))) / (
+                                              4 * dy * np.abs(y[l] - y[j]))
+                    elif m == i - 1 and j == l:
+                        H[n, m_new] = ((-3 * mass_x) * (np.exp(0.5*(x[i] - x[m])**2) * np.tanh(np.pi))) / (4 * dx * np.abs(x[i] - x[m]))
+                    elif m == i + 1 and j == l:
+                        H[n, m_new] = ((-3 * mass_x) * (np.exp(0.5*(x[i] - x[m])**2) * np.tanh(np.pi))) / (4 * dx * np.abs(x[i] - x[m]))
 
-    a = np.pi / (3 * mass_y)
-    for j in range(Ny):
-        j_prime = j
-        H_y[j, j_prime] = - 3*mass_y * (1/8) * (mass_y*((4*Ly) - (np.pi*np.tanh(a))) - 4*v[j, j_prime] + 4*np.pi)
-        if j > 0:
-            j_prime = j - 1
-            H_y[j, j_prime] = ((-3 * mass_y) * (np.exp(0.5*(y[j] - y[j_prime])**2) * np.tanh(np.pi))) / (4 * dy * np.abs(y[j] - y[j_prime]))
-        if j < Ny - 1:
-            j_prime = j + 1
-            H_y[j, j_prime] = ((-3 * mass_y) * (np.exp(0.5*(y[j] - y[j_prime])**2) * np.tanh(np.pi))) / (4 * dy * np.abs(y[j] - y[j_prime]))
-
-    Hx = np.kron(H_x, np.eye(Ny))
-    Hy = np.kron(np.eye(Nx), H_y)
-    H = Hx + Hy
     eigval, eigvec = np.linalg.eigh(H)
 
     wf = wfu.normalise_wf2(eigvec, x, y, neig)
     energies = wfu.evaluate_energies_2d(wf, x, y, v, neig)
 
-    return energies, wf
+    return energies, wf, H
 
 
 def algorithm_36_sparse(x, v, mass, neig):
@@ -195,7 +194,7 @@ def algorithm_100_2D(x, y, v, mass_x, mass_y, neig):
     wf = wfu.normalise_wf2(eigvec, x, y, neig)
     energies = wfu.evaluate_energies_2d(wf, x, y, v, neig)
 
-    return energies, wf
+    return energies, wf, H
 
 
 def algorithm_29_2D(x, y, v, mass_x, mass_y, neig):
@@ -245,7 +244,7 @@ def algorithm_29_2D(x, y, v, mass_x, mass_y, neig):
     wf = wfu.normalise_wf2(eigvec, x, y, neig)
     energies = wfu.evaluate_energies_2d(wf, x, y, v, neig)
 
-    return energies, wf
+    return energies, wf, H
 
 
 def algorithm_29(x, v, mass, neig):
@@ -299,12 +298,72 @@ def algorithm_29_sparse(x, v, mass, neig):
 
     return wf, energies, H
 
+def algorithm_27(x, v, mass, neig):
+
+    ngrid = len(x)
+    dx = x[1] - x[0]
+    L = x[-1] - x[0]
+
+    H = np.zeros((ngrid, ngrid))
+    for i in range(ngrid):
+        H[i, i] = - ((v[i, i] * dx) * (L * (np.tanh(L + (4*dx)/3 - (dx/(3*v[i, i]*mass) )) - 2) - 2*np.pi) - np.pi**2) / np.pi
+        if i > 0:
+            j = i - 1
+            H[i, j] = -((L * dx) * (np.tanh(((4 * mass) - np.exp((x[i]-x[j])**2)) / (3 * mass)) - 2) * np.exp(-(x[i]-x[j])**2)) / ( np.pi * (-1)**(i+1 - j+1) * abs((x[i]-x[j])**2))
+        if i < ngrid - 1:
+            j = i + 1
+            H[i, j] = -((L * dx) * (np.tanh(((4 * mass) - np.exp((x[i]-x[j])**2)) / (3 * mass)) - 2) * np.exp(-(x[i]-x[j])**2)) / ( np.pi * (-1)**(i+1 - j+1) * abs((x[i]-x[j])**2))
+
+    eigval, eigvec = np.linalg.eigh(H) # output - eigenvector of H
+
+    wf = wfu.normalise_wf(eigvec, x, neig)
+    energies = wfu.evaluate_energies(wf, x, v, neig)
+
+    return wf, energies, H
+
+def algorithm_27_2D(x, y, v, mass_x, mass_y, neig):
+
+    Nx = len(x)
+    Ny = len(y)
+    dx = x[1] - x[0]
+    dy = y[1] - y[0]
+    Lx = x[-1] - x[0]
+    Ly = y[-1] - y[0]
+
+    H_x = np.zeros((Nx, Nx))
+    H_y = np.zeros((Ny, Ny))
+
+    for i in range(Nx):
+        for i_prime in range(Nx):
+            if i == i_prime:
+                H_x[i, i_prime] = - ((v[i, i_prime] * dx) * (Lx * (np.tanh(Lx + (4*dx)/3 - (dx/(3*v[i, i_prime]*mass_x) )) - 2) - 2*np.pi) - np.pi**2) / np.pi
+            else:
+                H_x[i, i_prime] = -((Lx * dx) * (np.tanh(((4 * mass_x) - np.exp((x[i]-x[i_prime])**2)) / (3 * mass_x)) - 2) * np.exp(-(x[i]-x[i_prime])**2)) / ( np.pi * (-1)**(i+1 - i_prime+1) * abs((x[i]-x[i_prime])**2))
+
+    for j in range(Ny):
+        for j_prime in range(Ny):
+            if j == j_prime:
+                H_y[j, j_prime] = - ((v[j, j_prime] * dy) * (Ly * (np.tanh(Ly + (4*dy)/3 - (dy/(3*v[j, j_prime]*mass_y) )) - 2) - 2*np.pi) - np.pi**2) / np.pi
+            else:
+                H_y[j, j_prime] = -((Ly * dy) * (np.tanh(((4 * mass_y) - np.exp((y[j]-y[j_prime])**2)) / (3 * mass_y)) - 2) * np.exp(-(y[j]-y[j_prime])**2)) / ( np.pi * (-1)**(j+1 - j_prime+1) * abs((y[j]-y[j_prime])**2))
+
+    Hx = np.kron(H_x, np.eye(Ny))
+    Hy = np.kron(np.eye(Nx), H_y)
+    H = Hx + Hy
+    eigval, eigvec = np.linalg.eigh(H)
+
+    wf = wfu.normalise_wf2(eigvec, x, y, neig)
+    energies = wfu.evaluate_energies_2d(wf, x, y, v, neig)
+
+    return energies, wf, H
+
+
 
 if __name__ == "__main__":
 
     neig = 6
-    Nx = 11
-    Ny = 11
+    Nx = 21
+    Ny = 21
     x = np.linspace(-5, 5, Nx)
     y = np.linspace(-5, 5, Ny)
     dx, dy = x[1] - x[0], y[1] - y[0]
@@ -315,10 +374,13 @@ if __name__ == "__main__":
         for j in range(Ny):
             v[i, j] = potf.harmonic_potential_2d(x[i], y[j])
 
-    energies, wf = algorithm_100_2D(x, y, v, mass_x, mass_y, neig)
+    energies, wf, H = algorithm_100_2D(x, y, v, mass_x, mass_y, neig)
     print(energies)
-    energies, wf = algorithm_36_2D(x, y, v, mass_x, mass_y, neig)
+    energies, wf, H = algorithm_36_2D(x, y, v, mass_x, mass_y, neig)
     print(energies)
-    energies, wf = algorithm_29_2D(x, y, v, mass_x, mass_y, neig)
+    energies, wf, H = algorithm_29_2D(x, y, v, mass_x, mass_y, neig)
     print(energies)
+    energies, wf, H = algorithm_27_2D(x, y, v, mass_x, mass_y, neig)
+    print(energies)
+    breakpoint()
 
