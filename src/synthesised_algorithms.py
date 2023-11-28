@@ -4,6 +4,153 @@ from scipy.sparse.linalg import eigsh
 import wf_utils as wfu
 import potential_functions as potf
 
+def algorithm_2(x, v, mass, neig):
+
+    ngrid = len(x)
+    dx = x[1] - x[0]
+    L = x[-1] - x[0]
+
+    T = np.zeros((ngrid, ngrid))
+    V = np.zeros(ngrid)
+    for i in range(ngrid):
+        V[i] = 4 * v[i] - 4
+        T[i, i] = (4 * mass) / (3 * dx**2)
+        if i > 0:
+            j = i - 1
+            T[i, j] = (16 * (-1)**(i+1 - j+1) * mass * np.exp(0.5*(x[i] - x[j])**2)) / (3 * np.pi * dx**2)
+        if i < ngrid - 1:
+            j = i + 1
+            T[i, j] = (16 * (-1)**(i+1 - j+1) * mass * np.exp(0.5*(x[i] - x[j])**2)) / (3 * np.pi * dx**2)
+
+    H = T + np.diag(V)
+
+    eigval, eigvec = np.linalg.eigh(H)  # output - eigenvector of H
+
+    wf = wfu.normalise_wf(eigvec, x, neig)
+    energies = wfu.evaluate_energies(wf, x, v, neig)
+
+    return wf, energies, H
+
+
+def algorithm_2_2D(x, y, v, mass_x, mass_y, neig):
+
+    xmin, xmax = np.min(x), np.max(x)
+    ymin, ymax = np.min(y), np.max(y)
+    Nx = len(x)
+    Ny = len(y)
+    dx = x[1] - x[0]
+    dy = y[1] - y[0]
+    masses = [mass_x, mass_y]
+
+    V = np.zeros((Nx * Ny, Nx * Ny))
+    for i in range(Nx):
+        for j in range(Ny):
+            n = i * Ny + j
+            V[n, n] = 4 * v[i, j] - 4
+
+    T_x = np.zeros((Nx, Nx))
+    T_y = np.zeros((Ny, Ny))
+
+    for i in range(Nx):
+        i_prime = i
+        T_x[i, i_prime] = (4 * mass_x) / (3 * dx ** 2)
+        if i > 0:
+            i_prime = i - 1
+            T_x[i, i_prime] = (16 * (-1)**(i - i_prime) * mass_x * np.exp(0.5*(x[i] - x[i_prime])**2)) / (3 * np.pi * dx**2)
+        if i < Nx - 1:
+            i_prime = i + 1
+            T_x[i, i_prime] = (16 * (-1)**(i - i_prime) * mass_x * np.exp(0.5*(x[i] - x[i_prime])**2)) / (3 * np.pi * dx**2)
+
+    for j in range(Ny):
+        j_prime = j
+        T_y[j, j_prime] = (4 * mass_y) / (3 * dy ** 2)
+        if j > 0:
+            j_prime = j - 1
+            T_y[j, j_prime] = (16 * (-1)**(j - j_prime) * mass_y * np.exp(0.5*(y[j] - y[j_prime])**2)) / (3 * np.pi * dy**2)
+        if j < Ny - 1:
+            j_prime = j + 1
+            T_y[j, j_prime] = (16 * (-1)**(j - j_prime) * mass_y * np.exp(0.5*(y[j] - y[j_prime])**2)) / (3 * np.pi * dy**2)
+
+    Tx = np.kron(T_x, np.eye(Ny))
+    Ty = np.kron(np.eye(Nx), T_y)
+    T = Tx + Ty
+    H = T + V
+
+    energies, wfs = np.linalg.eigh(H)
+
+    wf = wfu.normalise_wf2(wfs, x, y, neig)
+    energies = wfu.evaluate_energies_2d(wf, x, y, v, masses, neig)
+
+    return energies, wf, H
+
+
+def algorithm_2_3D(x, y, z, v, mass_x, mass_y, mass_z, neig):
+
+    xmin, xmax = np.min(x), np.max(x)
+    ymin, ymax = np.min(y), np.max(y)
+    zmin, zmax = np.min(z), np.max(z)
+    Nx = len(x)
+    Ny = len(y)
+    Nz = len(z)
+    dx = x[1] - x[0]
+    dy = y[1] - y[0]
+    dz = z[1] - z[0]
+    masses = [mass_x, mass_y, mass_z]
+
+    V = np.zeros((Nx * Ny * Nz, Nx * Ny * Nz))
+    for i in range(Nx):
+        for j in range(Ny):
+            for k in range(Nz):
+                n = (i * Ny + j) * Nz + k
+                V[n, n] = 4 * v[i, j, k] - 4
+
+    T_x = np.zeros((Nx, Nx))
+    T_y = np.zeros((Ny, Ny))
+    T_z = np.zeros((Nz, Nz))
+
+    for i in range(Nx):
+        i_prime = i
+        T_x[i, i_prime] = (4 * mass_x) / (3 * dx ** 2)
+        if i > 0:
+            i_prime = i - 1
+            T_x[i, i_prime] = (16 * (-1)**(i - i_prime) * mass_x * np.exp(0.5*(x[i] - x[i_prime])**2)) / (3 * np.pi * dx**2)
+        if i < Nx - 1:
+            i_prime = i + 1
+            T_x[i, i_prime] = (16 * (-1)**(i - i_prime) * mass_x * np.exp(0.5*(x[i] - x[i_prime])**2)) / (3 * np.pi * dx**2)
+
+    for j in range(Ny):
+        j_prime = j
+        T_y[j, j_prime] = (4 * mass_y) / (3 * dy ** 2)
+        if j > 0:
+            j_prime = j - 1
+            T_y[j, j_prime] = (16 * (-1)**(j - j_prime) * mass_y * np.exp(0.5*(y[j] - y[j_prime])**2)) / (3 * np.pi * dy**2)
+        if j < Ny - 1:
+            j_prime = j + 1
+            T_y[j, j_prime] = (16 * (-1)**(j - j_prime) * mass_y * np.exp(0.5*(y[j] - y[j_prime])**2)) / (3 * np.pi * dy**2)
+
+    for k in range(Nz):
+        k_prime = k
+        T_z[k, k_prime] = (4 * mass_z) / (3 * dz ** 2)
+        if k > 0:
+            k_prime = k - 1
+            T_z[k, k_prime] = (16 * (-1) ** (k - k_prime) * mass_z * np.exp(0.5 * (z[k] - z[k_prime]) ** 2)) / (3 * np.pi * dz**2)
+        if k < Nz - 1:
+            k_prime = k + 1
+            T_z[k, k_prime] = (16 * (-1) ** (k - k_prime) * mass_z * np.exp(0.5 * (z[k] - z[k_prime]) ** 2)) / (3 * np.pi * dz**2)
+
+    T = np.kron(np.kron(T_x, np.eye(Ny)), np.eye(Nz)) + np.kron(np.kron(np.eye(Nx), T_y), np.eye(Nz)) + np.kron(
+        np.kron(np.eye(Nx), np.eye(Ny)), T_z)
+    H = T + V
+
+    energies, wfs = np.linalg.eigh(H)
+
+    wf = wfu.normalise_wf3(wfs, x, y, z, neig)
+    energies = wfu.evaluate_energies_3d(wf, x, y, z, v, masses, neig)
+
+    return energies[:neig], wf, H
+
+
+
 def algorithm_36(x, v, mass, neig):
 
     ngrid = len(x)

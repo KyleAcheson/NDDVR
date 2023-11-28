@@ -1,5 +1,5 @@
 
-def harmonic(x, k):
+def harmonic(x, k=1.0):
     return 0.5 * k * x**2
 
 def harmonic_potential_2d(x, y, kx=1.0, ky=1.0, mx=1.0, my=1.0):

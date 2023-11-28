@@ -26,7 +26,7 @@ def cm_dvr(x, v, mass, neig):
         c[:, i] = c[:, i] / np.sqrt(csum)
         E[i] = np.real(E[i])
 
-    return c[neig, :], E[:neig], H
+    return c[:, :neig], E[:neig], H
 
 
 def cm_dvr_2db(x, y, v, neig, hbar=1.0, mx=1.0, my=1.0):
