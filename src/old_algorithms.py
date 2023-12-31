@@ -4,6 +4,33 @@ from scipy.sparse.linalg import eigsh
 import wf_utils as wfu
 import potential_functions as potf
 
+def algorithm_80(x, v, mass, neig):
+    ngrid = len(x)
+    dx = x[1] - x[0]
+
+    T = np.zeros((ngrid, ngrid))
+    V = np.zeros(ngrid)
+    for i in range(ngrid):
+        for j in range(ngrid):
+            if i == j:
+                V[i] = 1/3 * (v[i] * ((np.sin(np.i0(1))) * np.pi)**3 + 3)
+                T[i, j] = ((1 / dx)**3 * dx) / (3 * np.pi)
+            elif j == i + 1 or j == i - 1:
+                a = (-1)**(i-j)
+                T[i, j] = (((2 / dx)**3 * a * np.pi * a + dx) * a * dx) / (3 * np.pi)
+            #else:
+            #    T[i, j] = (dx**2) / (3 * np.pi)
+
+    H = T + np.diag(V)
+
+    eigval, eigvec = np.linalg.eigh(H)  # output - eigenvector of H
+
+    wf = wfu.normalise_wf(eigvec, x, neig)
+    energies = wfu.evaluate_energies(wf, x, v, neig)
+
+    return wf, energies, H
+
+
 def algorithm_2(x, v, mass, neig):
 
     ngrid = len(x)
@@ -184,6 +211,7 @@ def algorithm_36_2D(x, y, v, mass_x, mass_y, neig):
     dy = y[1] - y[0]
     Lx = x[-1] - x[0]
     Ly = y[-1] - y[0]
+    masses = [mass_x, mass_y]
 
     H = np.zeros((Nx*Ny, Nx*Ny))
 
@@ -215,7 +243,7 @@ def algorithm_36_2D(x, y, v, mass_x, mass_y, neig):
     eigval, eigvec = np.linalg.eigh(H)
 
     wf = wfu.normalise_wf2(eigvec, x, y, neig)
-    energies = wfu.evaluate_energies_2d(wf, x, y, v, neig)
+    energies = wfu.evaluate_energies_2d(wf, x, y, v, masses, neig)
 
     return energies, wf, H
 
@@ -224,6 +252,7 @@ def algorithm_36_sparse(x, v, mass, neig):
     ngrid = len(x)
     dx = x[1] - x[0]
     L = x[-1] - x[0]
+    masses = [mass_x, mass_y]
 
     Hii = []
     Hij = []
@@ -353,6 +382,8 @@ def algorithm_29_2D(x, y, v, mass_x, mass_y, neig):
     Lx = x[-1] - x[0]
     Ly = y[-1] - y[0]
 
+    masses = [mass_x, mass_y]
+
     H_x = np.zeros((Nx, Nx))
     H_y = np.zeros((Ny, Ny))
 
@@ -389,7 +420,7 @@ def algorithm_29_2D(x, y, v, mass_x, mass_y, neig):
     eigval, eigvec = np.linalg.eigh(H)
 
     wf = wfu.normalise_wf2(eigvec, x, y, neig)
-    energies = wfu.evaluate_energies_2d(wf, x, y, v, neig)
+    energies = wfu.evaluate_energies_2d(wf, x, y, v, masses, neig)
 
     return energies, wf, H
 

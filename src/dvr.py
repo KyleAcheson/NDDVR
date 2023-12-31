@@ -1,213 +1,93 @@
 import numpy as np
-import wf_utils as wfu
-import plotting as pltg
-import potential_functions as potf
+#import line_profiler
+import scipy.linalg as spyl
 
-def cm_dvr(x, v, mass, neig):
-    ngrid = len(x)
-    hbar = 1.0
-    dx = x[1] - x[0]
-    V = np.zeros((ngrid, ngrid))
-    for i in range(ngrid):
-        V[i, i] = v[i]
+class Calculator:
 
-    T = np.zeros((ngrid, ngrid))
-    for i in range(ngrid):
-        for j in range(ngrid):
-            if i == j:
-                T[i, j] = ((hbar ** 2) * np.pi ** 2) / (6 * mass * dx ** 2)
-            else:
-                T[i, j] = ((hbar ** 2) * (-1.0) ** (i - j)) / (mass * dx ** 2 * (i - j) ** 2)
+    def __init__(self, algorithm):
+        self.calculate_kinetic_block = algorithm
 
-    H = T + V
-    E, c = np.linalg.eigh(H)
-    for i in range(ngrid):
-        csum = np.trapz(np.conj(c[:,i]) * c[:,i], x)
-        c[:, i] = c[:, i] / np.sqrt(csum)
-        E[i] = np.real(E[i])
+    def solve_1d(self, x, v, mass, neig, hbar=1):
+        ngrid = len(x)
+        V = np.zeros((ngrid, ngrid))
+        for i in range(ngrid):
+            V[i, i] = v[i]
 
-    return c[:, :neig], E[:neig], H
+        T = self.calculate_kinetic_block(x, mass, hbar)
 
+        H = T + V
+        energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig])
 
-def cm_dvr_2db(x, y, v, neig, hbar=1.0, mx=1.0, my=1.0):
+        return energies, wfs
 
-    xmin, xmax = np.min(x), np.max(x)
-    ymin, ymax = np.min(y), np.max(y)
-    Nx = len(x)
-    Ny = len(y)
-    dx = x[1] - x[0]
-    dy = y[1] - y[0]
+    def solve_nd(self, grids, masses, v, neig, hbar=1, ndim=2):
 
-    H = np.zeros((Nx*Ny, Nx*Ny))
+        if len(grids) != ndim:
+            raise TypeError('grids must be a list of arrays with length ndim')
+        if len(masses) != ndim:
+            raise TypeError('masses must be a list of real numbers with length ndim')
 
-    for i in range(Nx):
-        for j in range(Ny):
-            n = i * Ny + j
-            H[n, m_new] += ((hbar ** 2) * np.pi ** 2) / (6 * my * dy ** 2)
-            for m in range(Nx):
-                for l in range(Ny):
-                    m_new = m * Ny + l
-                    if i == m and j == l:
-                        H[n, m_new] += ((hbar ** 2) * np.pi ** 2) / (6 * mx * dx ** 2)
-                        H[n, m_new] += ((hbar ** 2) * np.pi ** 2) / (6 * my * dy ** 2)
-                        H[n, m_new] += v[m, l]
-                    elif i == m and j != l:
-                        H[n, m_new] = ((hbar ** 2) * (-1.0) ** (j - l)) / (my * dy ** 2 * (j - l) ** 2)
-                    elif i != m and j == l:
-                        H[n, m_new] = ((hbar ** 2) * (-1.0) ** (i - m)) / (mx * dx ** 2 * (i - m) ** 2)
+        grid_sizes = [len(grid) for grid in grids]
+        total_size = np.prod(grid_sizes)
+        vshape = v.shape
 
-    energies, wfs = np.linalg.eigh(H)
+        if len(vshape) == ndim and vshape != tuple(grid_sizes):
+            raise TypeError('if v is a nd array, it must have ndim dimensions each of length grids[n]')
+        elif len(vshape) == 1 and len(v) != total_size:
+            raise TypeError('if v is a 1d array, its length must be the product of all grid sizes')
 
-    return energies[:neig], wfs[:, :neig], H
+        H = self.kinetic_matrix_nd(grids, masses, grid_sizes, dim=ndim)
 
+        diag_inds = np.diag_indices(int(total_size))
 
+        if len(v.shape) == ndim:
+            H[diag_inds] += v.flatten()
+        else:
+            H[diag_inds] += v
 
+        energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig])
 
-def cm_dvr_2d(x, y, v, neig, hbar=1.0, mx=1.0, my=1.0):
+        return energies, wfs
 
-    xmin, xmax = np.min(x), np.max(x)
-    ymin, ymax = np.min(y), np.max(y)
-    Nx = len(x)
-    Ny = len(y)
-    dx = x[1] - x[0]
-    dy = y[1] - y[0]
+    def kinetic_matrix_nd(self, grids, masses, sizes, dim):
 
-    V = np.zeros((Nx * Ny, Nx * Ny))
-    for i in range(Nx):
-        for j in range(Ny):
-            n = i * Ny + j
-            V[n, n] = v[i, j]
+        if dim < 2:
+            raise ValueError
 
-    T_x = np.zeros((Nx, Nx))
-    T_y = np.zeros((Ny, Ny))
+        total_size = np.prod(sizes)
+        result_matrix = np.zeros((total_size, total_size))
 
-    for i in range(Nx):
-        for i_prime in range(Nx):
-            if i == i_prime:
-                T_x[i, i_prime] = ((hbar ** 2) * np.pi ** 2) / (6 * mx * dx ** 2)
-            else:
-                T_x[i, i_prime] = ((hbar ** 2) * (-1.0) ** (i - i_prime)) / (mx * dx ** 2 * (i - i_prime) ** 2)
+        for i in range(dim):
+            matricies = [np.eye(sizes[d]) for d in range(dim)]
+            matricies[i] = self.calculate_kinetic_block(grids[i], masses[i])
+            result = np.kron(matricies[0], matricies[1])
+            for j in range(2, dim):
+                result = np.kron(result, matricies[j])
+            result_matrix += result
 
-    for j in range(Ny):
-        for j_prime in range(Ny):
-            if j == j_prime:
-                T_y[j, j_prime] = ((hbar ** 2) * np.pi ** 2) / (6 * my * dy ** 2)
-            else:
-                T_y[j, j_prime] = ((hbar ** 2) * (-1.0) ** (j - j_prime)) / (my * dy ** 2 * (j - j_prime) ** 2)
-
-    Tx = np.kron(T_x, np.eye(Ny))
-    Ty = np.kron(np.eye(Nx), T_y)
-    T = Tx + Ty
-    H = T + V
-
-    energies, wfs = np.linalg.eigh(H)
-
-    return energies[:neig], wfs[:, :neig], H
-
-
-def cm_dvr_3d(x, y, z, v, neig, hbar=1.0, mx=1.0, my=1.0, mz=1.0):
-    xmin, xmax = np.min(x), np.max(x)
-    ymin, ymax = np.min(y), np.max(y)
-    zmin, zmax = np.min(z), np.max(z)
-
-    Nx = len(x)
-    Ny = len(y)
-    Nz = len(z)
-
-    dx = x[1] - x[0]
-    dy = y[1] - y[0]
-    dz = z[1] - z[0]
-
-    V = np.zeros((Nx * Ny * Nz, Nx * Ny * Nz))
-
-    for i in range(Nx):
-        for j in range(Ny):
-            for k in range(Nz):
-                n = (i * Ny + j) * Nz + k
-                V[n, n] = v[i, j, k]
-
-    T_x = np.zeros((Nx, Nx))
-    T_y = np.zeros((Ny, Ny))
-    T_z = np.zeros((Nz, Nz))
-
-    for i in range(Nx):
-        for i_prime in range(Nx):
-            if i == i_prime:
-                T_x[i, i_prime] = ((hbar ** 2) * np.pi ** 2) / (6 * mx * dx ** 2)
-            else:
-                T_x[i, i_prime] = ((hbar ** 2) * (-1.0) ** (i - i_prime)) / (mx * dx ** 2 * (i - i_prime) ** 2)
-
-    for j in range(Ny):
-        for j_prime in range(Ny):
-            if j == j_prime:
-                T_y[j, j_prime] = ((hbar ** 2) * np.pi ** 2) / (6 * my * dy ** 2)
-            else:
-                T_y[j, j_prime] = ((hbar ** 2) * (-1.0) ** (j - j_prime)) / (my * dy ** 2 * (j - j_prime) ** 2)
-
-    for k in range(Nz):
-        for k_prime in range(Nz):
-            if k == k_prime:
-                T_z[k, k_prime] = ((hbar ** 2) * np.pi ** 2) / (6 * mz * dz ** 2)
-            else:
-                T_z[k, k_prime] = ((hbar ** 2) * (-1.0) ** (k - k_prime)) / (mz * dz ** 2 * (k - k_prime) ** 2)
-
-    T = np.kron(np.kron(T_x, np.eye(Ny)), np.eye(Nz)) + np.kron(np.kron(np.eye(Nx), T_y), np.eye(Nz)) + np.kron(
-        np.kron(np.eye(Nx), np.eye(Ny)), T_z)
-
-    H = T + V
-    energies, wfs = np.linalg.eigh(H)
-
-    return energies[:neig], wfs[:, :neig], H
+        return result_matrix
 
 
 if __name__ == "__main__":
+    import potential_functions as potf
+    import synthesised_solvers as ss
+    import exact_solvers as es
 
     # TEST 2D ISOTROPIC HARMONIC OSCILLATOR
 
     neig = 3
-    Nx = 35  # Number of grid points in x
-    Ny = 35  # Number of grid points in y
+    Nx = 31
+    Ny = 31
     xmin, xmax = -5.0, 5.0
     ymin, ymax = -5.0, 5.0
     x = np.linspace(xmin, xmax, Nx)
     y = np.linspace(ymin, ymax, Ny)
 
-    v = np.zeros((Nx, Ny))
-    for i in range(Nx):
-        for j in range(Nx):
-            v[i, j] = potf.harmonic_potential_2d(x[i], y[j])
+    v = potf.harmonic_potential_2d(x[:, None], y[None, :])
 
-    energies, wfs, H = cm_dvr_2d(x, y, v)
-    print(energies[:neig]) # energies from diagonalisation of H (2D)
+    calculator = Calculator(es.colbert_miller)
+    grids = [x, y]
+    masses = [1, 1]
+    energies, wfs = calculator.solve_nd(grids, masses, v, neig, ndim=3)
+    print(energies)
 
-    wfs = wfu.normalise_wf2(wfs, x, y, neig)
-    energies = wfu.evaluate_energies_2d(wfs, x, y, v, neig)
-    print(energies) # compare w energies evaluated as expectation value of \hat{V} and \hat{T}
-                    # \hat{T} is evaluated in momemntum space - using 2D FFT
-
-    pltg.plot_wavefunctions_2d(x, y, wfs, energies, neig)
-
-    # TEST 3D ISOTROPIC HARMONIC OSCILLATOR
-
-    neig = 3
-    Nx = 11  # Number of grid points in x
-    Ny = 11  # Number of grid points in y
-    Nz = 11  # Number of grid points in y
-    xmin, xmax = -5.0, 5.0
-    ymin, ymax = -5.0, 5.0
-    zmin, zmax = -5.0, 5.0
-    x = np.linspace(xmin, xmax, Nx)
-    y = np.linspace(ymin, ymax, Ny)
-    z = np.linspace(zmin, zmax, Nz)
-
-    v = np.zeros((Nx, Ny, Nz))
-    for i in range(Nx):
-        for j in range(Nx):
-            for k in range(Nz):
-                v[i, j, k] = potf.harmonic_potential_3d(x[i], y[j], z[k])
-
-    energies, wfs, H = cm_dvr_3d(x, y, z, v, neig)
-    print(energies[:neig]) # energies for 3D oscillator
-    wfs = wfs.reshape(Nx, Ny, Nz, neig)
-
-    pltg.plot_wavefunctions_3d(x, y, z, wfs, energies, neig)
