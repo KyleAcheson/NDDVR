@@ -68,6 +68,11 @@ def test_algorithms(wdir, pdir, ptypes, grid_size, algorithms, masses, ndims, ne
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-g', dest="grid_size", required=True, type=str)
+
+    args = parser.parse_args()
 
     pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
     wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple'
@@ -78,6 +83,6 @@ if __name__ == "__main__":
 
     algorithms = {'A116': algorithm_116, 'A129': algorithm_129, 'A152': algorithm_152, 'A175': algorithm_175, 'A131': algorithm_131}
     ptypes = ['harmonic', 'anharmonic', 'morse', 'double_well', 'asym_double_well']
-    grid_size = '31x31'
+    grid_size = args.grid_size
 
     test_algorithms(wdir, pdir, ptypes, grid_size, algorithms, masses, ndims, neig)
