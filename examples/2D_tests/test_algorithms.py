@@ -69,18 +69,15 @@ def test_algorithms(wdir, pdir, ptypes, grid_size, algorithms, masses, ndims, ne
 
 if __name__ == "__main__":
 
-    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic'
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/outputs'
+    pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple'
 
     masses = [1, 1]
     ndims = 2
     neig = 3
 
     algorithms = {'A116': algorithm_116, 'A129': algorithm_129, 'A152': algorithm_152, 'A175': algorithm_175, 'A131': algorithm_131}
-    #ptypes = ['harmonic', 'morse', 'double_well', 'asym_double_well']
-    ptypes = ['harmonic']
+    ptypes = ['harmonic', 'anharmonic', 'morse', 'double_well', 'asym_double_well']
     grid_size = '31x31'
 
     test_algorithms(wdir, pdir, ptypes, grid_size, algorithms, masses, ndims, neig)
-    print('done')
-    breakpoint()
