@@ -5,7 +5,15 @@ import scipy.linalg as spyl
 class Calculator:
 
     def __init__(self, algorithm):
-        self.calculate_kinetic_block = algorithm
+        self.algorithm = algorithm
+
+    @property
+    def algorithm(self):
+        return self._algorithm
+
+    @algorithm.setter
+    def algorithm(self, algorithm):
+        self._algorithm = algorithm
 
     def solve_1d(self, x, v, mass, neig, hbar=1):
         ngrid = len(x)
@@ -13,10 +21,10 @@ class Calculator:
         for i in range(ngrid):
             V[i, i] = v[i]
 
-        T = self.calculate_kinetic_block(x, mass, hbar)
+        T = self.algorithm(x, mass, hbar)
 
         H = T + V
-        energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig])
+        energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig-1])
 
         return energies, wfs
 
@@ -45,7 +53,7 @@ class Calculator:
         else:
             H[diag_inds] += v
 
-        energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig])
+        energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig-1])
 
         return energies, wfs
 
@@ -59,7 +67,7 @@ class Calculator:
 
         for i in range(dim):
             matricies = [np.eye(sizes[d]) for d in range(dim)]
-            matricies[i] = self.calculate_kinetic_block(grids[i], masses[i])
+            matricies[i] = self.algorithm(grids[i], masses[i])
             result = np.kron(matricies[0], matricies[1])
             for j in range(2, dim):
                 result = np.kron(result, matricies[j])
@@ -69,25 +77,27 @@ class Calculator:
 
 
 if __name__ == "__main__":
-    import potential_functions as potf
+    import potentials as pots
     import synthesised_solvers as ss
     import exact_solvers as es
+    import wf_utils as wfu
 
-    # TEST 2D ISOTROPIC HARMONIC OSCILLATOR
+    # TEST 2D POTENTIAL FROM FILE
+    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials'
+    pot_file = f'{pdir}/harmonic/harmonic/isotropic_harmonic1_ngrid31.tab'
+    grid_file = f'{pdir}/harmonic/harmonic/isotropic_harmonic_grid_ngrid31.tab'
 
     neig = 3
-    Nx = 31
-    Ny = 31
-    xmin, xmax = -5.0, 5.0
-    ymin, ymax = -5.0, 5.0
-    x = np.linspace(xmin, xmax, Nx)
-    y = np.linspace(ymin, ymax, Ny)
+    masses = [1, 1]
 
-    v = potf.harmonic_potential_2d(x[:, None], y[None, :])
+    v, grids = pots.load_potential(pot_file, grid_file, ndim=2, order='F')
 
     calculator = Calculator(es.colbert_miller)
-    grids = [x, y]
-    masses = [1, 1]
-    energies, wfs = calculator.solve_nd(grids, masses, v, neig, ndim=3)
+    energies, wfs = calculator.solve_nd(grids, masses, v, neig, ndim=2)
     print(energies)
 
+    calculator.algorithm = ss.algorithm_129
+    energies, wfs = calculator.solve_nd(grids, masses, v, neig, ndim=2)
+    energies, wfs = wfu.evaluate_energies(wfs, grids, v, masses, neig, ndim=2, normalise=True)
+    print(energies)
+    breakpoint()

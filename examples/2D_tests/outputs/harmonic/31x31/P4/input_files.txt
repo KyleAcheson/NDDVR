@@ -1,0 +1,2 @@
+/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic/harmonic/31x31/anisotropic_harmonic3_ngrid31.tab
+/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic/harmonic/31x31/isotropic_harmonic_grid_ngrid31.tab

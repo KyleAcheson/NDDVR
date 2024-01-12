@@ -25,7 +25,7 @@ def evaluate_energies(wf, grid, v, mass, neig, ndim=1, normalise=False):
         raise ValueError
 
     if normalise:
-        return wf, energies
+        return energies, wf
     else:
         return energies
 

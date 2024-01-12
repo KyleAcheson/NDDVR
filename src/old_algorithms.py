@@ -2,7 +2,7 @@ import numpy as np
 from scipy.sparse import diags
 from scipy.sparse.linalg import eigsh
 import wf_utils as wfu
-import potential_functions as potf
+import potentials as potf
 
 def algorithm_80(x, v, mass, neig):
     ngrid = len(x)

@@ -27,8 +27,14 @@ def plot_wavefunctions_2d(x, y, eigenvectors, eigenvalues, num_to_plot=3, fname=
         contour = ax.contour(x, y, wf, zdir='z', offset=np.min(wf)-L, cmap=cm, norm=norm)
         ax.set_zlim([np.min(wf)-L, np.max(wf)+L])
         ax.set_zticks([])
+        ax.set_xticks([])
+        ax.set_yticks([])
         ax.zaxis.majorTicks = []
         ax.zaxis.minorTicks = []
+        #ax.xaxis.majorTicks = []
+        #ax.xaxis.minorTicks = []
+        #ax.yaxis.majorTicks = []
+        #ax.yaxis.minorTicks = []
         ax.xaxis.pane.fill = False
         ax.yaxis.pane.fill = False
         ax.zaxis.pane.fill = False
@@ -38,12 +44,12 @@ def plot_wavefunctions_2d(x, y, eigenvectors, eigenvalues, num_to_plot=3, fname=
         ax.get_zaxis().set_visible(False)
         ax.spines['top'].set_visible(False)
         ax.zaxis.line.set_lw(0)
-        ax.xaxis._axinfo["grid"].update({"linewidth": 0})
-        ax.yaxis._axinfo["grid"].update({"linewidth": 0})
-        ax.zaxis._axinfo["grid"].update({"linewidth": 0})
-        fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+        #ax.xaxis._axinfo["grid"].update({"linewidth": 0})
+        #ax.yaxis._axinfo["grid"].update({"linewidth": 0})
+        #ax.zaxis._axinfo["grid"].update({"linewidth": 0})
+        #fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 
-        ax.set_title(f'$\psi {i}$ ($E$ = {eigenvalues[i]:.2f})')
+        #ax.set_title(f'$\psi {i}$ ($E$ = {eigenvalues[i]:.2f})')
 
         if fname:
             fout = f'{fname}_neig{i}.png'

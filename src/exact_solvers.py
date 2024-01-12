@@ -1,7 +1,6 @@
 import numpy as np
 import warnings
 
-
 def colbert_miller(grid, mass, hbar=1):
     ngrid = len(grid)
     dg = grid[1] - grid[0]

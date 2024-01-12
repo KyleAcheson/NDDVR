@@ -5,8 +5,8 @@ sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(_
                  os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
 import src.dvr as dvr
 import src.plotting as pltg
-import src.potential_functions as potf
-import src.synthesised_algorithms as sa
+import src.potentials as potf
+import src.old_algorithms as sa
 import matplotlib.pyplot as plt
 import src.wf_utils as utils
 
