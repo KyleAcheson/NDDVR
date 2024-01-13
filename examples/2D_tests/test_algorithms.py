@@ -8,11 +8,12 @@ import src.potentials as potf
 from src.synthesised_solvers import *
 from src.exact_solvers import *
 import src.wf_utils as wfu
+from natsort import natsorted
 
 
 def get_potential_files(pdir):
     all_files = os.listdir(pdir)
-    file_paths = [os.path.join(pdir, file) for file in all_files if file.endswith('.tab') and 'grid_ngrid' not in file]
+    file_paths = natsorted([os.path.join(pdir, file) for file in all_files if file.endswith('.tab') and 'grid_ngrid' not in file])
     return file_paths
 
 
