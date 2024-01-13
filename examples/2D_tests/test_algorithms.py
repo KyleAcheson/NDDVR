@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../../src'),
+sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '..'),
                  os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
 import src.dvr as dvr
 import src.potentials as potf
