@@ -75,15 +75,19 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
-    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple'
+    #pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
+    #wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple'
+    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic'
+    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/outputs'
 
     masses = [1, 1]
     ndims = 2
     neig = 3
 
-    algorithms = {'A116': algorithm_116, 'A129': algorithm_129, 'A152': algorithm_152, 'A175': algorithm_175, 'A131': algorithm_131}
-    ptypes = ['harmonic', 'anharmonic', 'morse', 'double_well', 'asym_double_well']
+    algorithms = var_N10_algorithms
+    #ptypes = ['harmonic', 'anharmonic', 'morse', 'double_well', 'asym_double_well']
+    ptypes = ['harmonic']
+
     grid_size = args.grid_size
 
     test_algorithms(wdir, pdir, ptypes, grid_size, algorithms, masses, ndims, neig)
