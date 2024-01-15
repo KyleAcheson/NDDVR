@@ -1,11 +1,13 @@
 import numpy as np
 #import line_profiler
 import scipy.linalg as spyl
+from scipy import sparse
 
 class Calculator:
 
-    def __init__(self, algorithm):
+    def __init__(self, algorithm, tridiag=False):
         self.algorithm = algorithm
+        self.tridiag = tridiag
 
     @property
     def algorithm(self):
@@ -53,7 +55,11 @@ class Calculator:
         else:
             H[diag_inds] += v
 
-        energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig-1])
+        #if self.tridiag:
+        H = sparse.coo_matrix(H)
+        energies, wfs = sparse.linalg.eigsh(H, k=neig, which='SM')
+        #else:
+        #    energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig-1])
 
         return energies, wfs
 

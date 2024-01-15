@@ -77,7 +77,7 @@ def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
     for ptype in ptypes:
         parent_dir = f'{pdir}/{ptype}'
         out_dir = f'{wdir}/{ptype}'
-        subdirectories = [d for d in os.listdir(out_dir) if os.path.isdir(os.path.join(out_dir, d))]
+        subdirectories = natsorted([d for d in os.listdir(out_dir) if os.path.isdir(os.path.join(out_dir, d))])
         grid_labels = []
         ngrids = len(subdirectories)
         grids = np.arange(ngrids)
@@ -100,10 +100,9 @@ def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
                     ps_energies[j, i, :] = np.genfromtxt(ps_file)
             ps_energies_all.append(ps_energies)
             dvr_energies_all.append(dvr_energies)
-        dvr_energies_all = np.array(dvr_energies_all)
-        ps_energies_all = np.array(ps_energies_all)
+        dvr_energies_all = np.asarray(dvr_energies_all)
+        ps_energies_all = np.asarray(ps_energies_all)
 
-        grid_labels.reverse()
         best_algorithms = []
         converged_algorithms = {k: [] for k in algorithms.keys()}
         for eig in range(neig):
@@ -114,7 +113,7 @@ def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
                 for i in range(npots):
                     ref = dvr_energies_all[-1, i, eig]
                     dvr = dvr_energies_all[:, i, eig]
-                    ps = np.flip(ps_energies_all[:, j, i, eig])
+                    ps = ps_energies_all[:, j, i, eig]
                     dE_ps = (ps - ref) / ref
                     if np.abs(dE_ps[-1]) <= conv_thresh:
                         conv_pot.append(True)
@@ -144,7 +143,7 @@ def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
             if all(converged_algorithms[algorithm]):
                 best_algorithms.append(algorithm)
 
-        with open(f'{out_dir}/converged_algorithms.txt', 'w+') as f:
+        with open(f'{out_dir}/converged_algorithms_{ptype}.txt', 'w+') as f:
             f.write(', '.join(best_algorithms))
 
 
@@ -160,10 +159,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    #pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
-    #wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple'
-    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic'
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/outputs'
+    pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple'
+    #pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic'
+    #wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/outputs'
 
     masses = [1, 1]
     ndims = 2
@@ -171,8 +170,8 @@ if __name__ == "__main__":
     conv_thresh = 0.005
 
     algorithms = var_N10_algorithms
-    #ptypes = ['harmonic', 'anharmonic', 'morse', 'double_well', 'asym_double_well']
-    ptypes = ['harmonic']
+    ptypes = ['harmonic', 'anharmonic', 'morse', 'double_well', 'asym_double_well']
+    #ptypes = ['harmonic']
 
     grid_size = args.grid_size
 

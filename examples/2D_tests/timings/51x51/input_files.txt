@@ -1,0 +1,2 @@
+/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic/morse/51x51/morse_harmonic0_ngrid51.tab
+/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic/morse/51x51/morse_harmonic_grid_ngrid51.tab
