@@ -202,12 +202,133 @@ def algorithm_200(grid, mass, hbar=1):
 
 # N10 Algorithms #
 
+def algorithm_16(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    diff_term = np.diag((grid[:, None] - grid[None, :]), k=-1)
+    diagonal = np.full(ng, np.sinh(np.log(np.tanh(1)**0.5)) - 3)
+    diag_pm1 = np.full(ng-1, (sq_term - 1) / (2 * diff_term) - 3 - np.pi)
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
+
+def algorithm_19(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    qrt_term = np.diag((grid[:, None] - grid[None, :])**4, k=-1)
+    diagonal = np.full(ng, -mass)
+    diag_pm1 = np.full(ng-1, ((mass + 1)**2 * qrt_term - 1) / (2 * mass * (mass + 1) * sq_term))
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
+
+
+def algorithm_75(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    exp_term = np.diag(np.exp(-0.5*(grid[:, None] - grid[None, :])**2), k=-1)
+    diagonal = np.full(ng, np.sinh(np.log(np.i0(1) + 2 * mass)))
+    diag_pm1 = np.full(ng-1, np.sinh(np.log(sq_term * ((1 + mass) * exp_term + mass)) - mass))
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
+
+
+def algorithm_91(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    diagonal = np.full(ng, np.sinh(np.log(2 ** (np.cos(1) / np.pi))) * 2)
+    diag_pm1 = np.full(ng-1, np.sinh(np.log(2 ** (np.cos(1) / np.pi) * sq_term)))
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
+
+def algorithm_124(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    diagonal = np.full(ng, np.sinh(np.log( 1 / mass))) + mass
+    diag_pm1 = np.full(ng-1, np.sinh(np.log(sq_term * ((1/ L) + mass) * (1 / mass))))
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
+
+
+def algorithm_129b(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    exp_term = np.diag(np.exp(-1*(grid[:, None] - grid[None, :])**2), k=-1)
+    diagonal = np.full(ng, 0.0)
+    diag_pm1 = np.full(ng-1, (exp_term * 3 * (np.sinh(np.log(sq_term) + mass) * (1 / mass))) - 2)
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
+
+
+def algorithm_132(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    diagonal = np.full(ng, 0.0)
+    diag_pm1 = np.full(ng-1, np.sinh(np.log(((1 / L) + mass) * sq_term * (1 / mass))))
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
+
+
+def algorithm_140(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    exp_term = np.diag(np.exp(-0.5*(grid[:, None] - grid[None, :])**2), k=-1)
+    diagonal = np.full(ng, np.sinh(np.log(3) * np.pi))
+    diag_pm1 = np.full(ng-1, np.sinh(np.log((exp_term + 2) * sq_term) - mass))
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
 
 
 
+def algorithm_146(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
+
+    exp_term = np.diag(np.exp(-1*(grid[:, None] - grid[None, :])**2), k=-1)
+    diagonal = np.full(ng, np.pi)
+    diag_pm1 = np.full(ng-1, np.sinh(np.log(1 + (-1 * exp_term))) + np.pi - 3)
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
 
 
+def algorithm_197(grid, mass, hbar=1):
+    ng = len(grid)
+    L = grid[-1] - grid[0]
 
+    sq_term = np.diag((grid[:, None] - grid[None, :])**2, k=-1)
+    diagonal = np.full(ng, np.sinh(np.log(np.cosh((-np.pi / L))**4)) * (1 / mass))
+    diag_pm1 = np.full(ng-1, (1 / mass) * np.sinh(np.log(sq_term * (np.cosh((1 - np.pi) / L))**4)))
+    T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
+
+    return T_n
+
+
+rms_tfunc_nodx_N10_algorithms = {'A16': algorithm_16, 'A19': algorithm_19, 'A75': algorithm_75, 'A91': algorithm_91,
+                                 'A124': algorithm_124, 'A129b': algorithm_129b, 'A132': algorithm_132, 'A140': algorithm_140,
+                                 'A146': algorithm_146, 'A197': algorithm_197}
 
 rms_tfunc_N10_algorithms = {'A116': algorithm_116, 'A129': algorithm_129, 'A152': algorithm_152, 'A175': algorithm_175,
                             'A131': algorithm_131}

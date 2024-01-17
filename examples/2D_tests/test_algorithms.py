@@ -159,7 +159,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
-    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_var_tfunc/simple'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/nodx/N10_rms_tfunc/simple'
     #pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic'
     #wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/outputs'
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     neig = 3
     conv_thresh = 0.005
 
-    algorithms = var_N10_algorithms
+    algorithms = rms_tfunc_nodx_N10_algorithms
     ptypes = ['harmonic', 'anharmonic', 'morse', 'double_well', 'asym_double_well']
     #ptypes = ['harmonic']
 
