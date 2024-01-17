@@ -31,7 +31,6 @@ def write_energies(energies, out_dir, algorithm, format='%10.12f'):
     with open(fname, 'a') as f:
         np.savetxt(f, energies, fmt=format)
 
-import src.dvr as dvr
 
 def write_wfs(wfs, neig, out_dir, algorithm, format='%10.12f'):
     fname = f'{out_dir}/{algorithm}_wfs.dat'
@@ -160,7 +159,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
-    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_var_tfunc/simple'
     #pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic'
     #wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/outputs'
 
