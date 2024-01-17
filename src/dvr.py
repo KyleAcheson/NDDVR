@@ -57,7 +57,7 @@ class Calculator:
 
         #if self.tridiag:
         H = sparse.coo_matrix(H)
-        energies, wfs = sparse.linalg.eigsh(H, k=neig, which='SM')
+        energies, wfs = sparse.linalg.eigsh(H, k=neig, which='SA')
         #else:
         #    energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig-1])
 

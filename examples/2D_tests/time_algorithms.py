@@ -29,14 +29,12 @@ def get_grid_files(pdir):
 def run_cm_dvr(grids, masses, v, neig, ndims):
     calculator = dvr.Calculator(colbert_miller)
     exact_energies, exact_wfs = calculator.solve_nd(grids, masses, v, neig, ndim=ndims)
-    print('dvr: ', exact_energies)
 
 
 def run_algorithm(algorithm, grids, masses, v, neig, ndims):
     calculator = dvr.Calculator(algorithm, tridiag=True)
     ps_energies, ps_wfs = calculator.solve_nd(grids, masses, v, neig, ndim=ndims)
     ps_energies, ps_wfs = wfu.evaluate_energies(ps_wfs, grids, v, masses, neig, ndim=ndims, normalise=True)
-    print('ps: ', ps_energies)
 
 
 def time_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nruns=5):
@@ -89,10 +87,10 @@ def time_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nru
 
 if __name__ == "__main__":
 
-    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic/morse'
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/timings'
-    #pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic/morse'
-    #wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple/timings'
+    #pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic/morse'
+    #wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/timings'
+    pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic/morse'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple/timings'
 
     grid_sizes = ['31x31', '41x41', '51x51', '61x61', '71x71', '81x81', '91x91', '101x101']
     #grid_sizes = ['31x31', '41x41', '51x51', '61x61', '71x71']
@@ -103,6 +101,6 @@ if __name__ == "__main__":
     nruns = 3
 
     algorithms = rms_tfunc_N10_algorithms
-    algorithms = {'131': algorithm_131}
+    #algorithms = {'131': algorithm_131}
 
     time_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nruns)
