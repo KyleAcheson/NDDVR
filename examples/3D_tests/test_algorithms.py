@@ -93,10 +93,10 @@ def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
             for i, potential in enumerate(potential_files):
                 problem_dir = f'{grid_dir}/P{i}'
                 exact_file = f'{problem_dir}/cm_dvr_energies.dat'
-                dvr_energies[i, :] = np.genfromtxt(exact_file)
+                dvr_energies[i, :] = np.genfromtxt(exact_file)[:neig]
                 for j, algorithm in enumerate(algorithms.keys()):
                     ps_file = f'{problem_dir}/{algorithm}_energies.dat'
-                    ps_energies[j, i, :] = np.genfromtxt(ps_file)
+                    ps_energies[j, i, :] = np.genfromtxt(ps_file)[:neig]
             ps_energies_all.append(ps_energies)
             dvr_energies_all.append(dvr_energies)
         dvr_energies_all = np.asarray(dvr_energies_all)
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     masses = [1, 1, 1]
     ndims = 3
     neig = 3
-    conv_thresh = 0.005
+    conv_thresh = 0.01
 
     algorithms = rms_tfunc_N10_algorithms
     #algorithms = {'A131': algorithm_131}
