@@ -1,0 +1,2 @@
+/home/kyle/PycharmProjects/Potential_Generator/potentials/3D/harmonic/25x25x25/harmonic0_ngrid25.tab
+/home/kyle/PycharmProjects/Potential_Generator/potentials/3D/harmonic/25x25x25/harmonic_grid_ngrid25.tab

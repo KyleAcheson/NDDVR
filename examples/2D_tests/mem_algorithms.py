@@ -12,7 +12,7 @@ from src.synthesised_solvers import *
 from src.exact_solvers import *
 import src.wf_utils as wfu
 from natsort import natsorted
-import timeit
+import memory_profiler as mp
 
 
 def get_potential_files(pdir):
@@ -30,18 +30,20 @@ def get_grid_files(pdir):
 def run_cm_dvr(grids, masses, v, neig, ndims):
     calculator = dvr.Calculator(colbert_miller)
     exact_energies, exact_wfs = calculator.solve_nd(grids, masses, v, neig, ndim=ndims)
+    return exact_energies, exact_wfs
 
 
 def run_algorithm(algorithm, grids, masses, v, neig, ndims):
     calculator = dvr.Calculator(algorithm, tridiag=True)
     ps_energies, ps_wfs = calculator.solve_nd(grids, masses, v, neig, ndim=ndims)
     ps_energies, ps_wfs = wfu.evaluate_energies(ps_wfs, grids, v, masses, neig, ndim=ndims, normalise=True)
+    return ps_energies, ps_wfs
 
 
-def time_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nruns=5):
+def test_mem_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nruns=5):
 
-    cm_dvr_times = []
-    ps_algorithm_times = {k: [] for k in algorithms.keys()}
+    cm_dvr_mems = []
+    ps_algorithm_mems = {k: [] for k in algorithms.keys()}
     for grid_size in grid_sizes:
         pot_dir = f'{pdir}/{grid_size}'
         potential_file = get_potential_files(pot_dir)
@@ -53,35 +55,39 @@ def time_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nru
         with open(f'{out_dir}/input_files.txt', 'w') as f:
             f.write(f'{potential_file}\n')
             f.write(f'{grid_file}')
-            exact_times = timeit.repeat(lambda: run_cm_dvr(grids, masses, v, neig, ndims), repeat=nruns, number=1)
-            best_exact_time = min(exact_times)
-            cm_dvr_times.append(best_exact_time)
+            start_mem = mp.memory_usage(max_usage=True)
+            res = mp.memory_usage(proc=(run_cm_dvr, [grids, masses, v, neig, ndims]), max_usage=True,
+                                  retval=True)
+            used_mem_dvr = res[0] - start_mem
+            cm_dvr_mems.append(used_mem_dvr)
             for algo_name, algorithm in algorithms.items():
-                algorithm_times = timeit.repeat(lambda: run_algorithm(algorithm, grids, masses, v, neig, ndims), repeat=nruns, number=1)
-                best_algorithm_time = min(algorithm_times)
-                ps_algorithm_times[algo_name].append(best_algorithm_time)
+                start_mem = mp.memory_usage(max_usage=True)
+                res = mp.memory_usage(proc=(run_algorithm, [algorithm, grids, masses, v, neig, ndims]), max_usage=True,
+                                      retval=True)
+                used_mem_ps = res[0] - start_mem
+                ps_algorithm_mems[algo_name].append(used_mem_ps)
 
 
     grids = np.arange(len(grid_sizes))
     fig, ax = plt.subplots()
-    ax.plot(grids, cm_dvr_times, '-o', label='CM-DVR')
-    cm_dvr_times = [str(i) for i in cm_dvr_times]
-    with open(f'{wdir}/cm_dvr_timings.tab', 'w+') as f:
-        f.write(', '.join(cm_dvr_times))
+    ax.plot(grids, cm_dvr_mems, '-o', label='CM-DVR')
+    cm_dvr_mems = [str(i) for i in cm_dvr_mems]
+    with open(f'{wdir}/cm_dvr_memory.tab', 'w+') as f:
+        f.write(', '.join(cm_dvr_mems))
 
     for algo_name in algorithms.keys():
-        algo_times = ps_algorithm_times[algo_name]
-        ax.plot(grids, algo_times, '-o', label=f'{algo_name}')
-        algo_times = [str(i) for i in algo_times]
-        with open(f'{wdir}/{algo_name}_timings.tab', 'w+') as f:
-            f.write(', '.join(algo_times))
+        algo_mems = ps_algorithm_mems[algo_name]
+        ax.plot(grids, algo_mems, '-o', label=f'{algo_name}')
+        algo_mems = [str(i) for i in algo_mems]
+        with open(f'{wdir}/{algo_name}_memory.tab', 'w+') as f:
+            f.write(', '.join(algo_mems))
 
 
     ax.set_xlabel('$N_{\mathrm{g}}$')
-    ax.set_ylabel('$t (s)$')
+    ax.set_ylabel('Memory (Mb)')
     ax.set_xticks(grids, grid_sizes)
     ax.legend(loc='upper left', ncols=2, frameon=False)
-    fig.savefig(f'{wdir}/algorithm_timings.png')
+    fig.savefig(f'{wdir}/algorithm_memory_consumption.png')
     fig.clear()
     plt.close(fig)
 
@@ -91,9 +97,11 @@ if __name__ == "__main__":
     #pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic/morse'
     #wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/timings'
     pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic/morse'
-    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple/timings'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple/memory_consumption'
 
-    grid_sizes = ['31x31', '41x41', '51x51', '61x61', '71x71', '81x81', '91x91', '101x101']
+
+    grid_sizes = ['21x21x21', '31x31x31', '41x41x41', '51x51x51', '61x61x61',
+                  '71x71x71', '81x81x81', '91x91x91', '101x101x101']
 
     masses = [1, 1]
     ndims = 2
@@ -101,6 +109,5 @@ if __name__ == "__main__":
     nruns = 3
 
     algorithms = rms_tfunc_N10_algorithms
-    #algorithms = {'131': algorithm_131}
 
-    time_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nruns)
+    test_mem_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nruns)

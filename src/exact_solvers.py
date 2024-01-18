@@ -1,5 +1,6 @@
 import numpy as np
 import warnings
+from scipy import sparse
 
 def colbert_miller(grid, mass, hbar=1):
     ngrid = len(grid)
@@ -9,4 +10,4 @@ def colbert_miller(grid, mass, hbar=1):
         warnings.simplefilter('ignore')
         T_n = ((hbar ** 2) * (-1.0)**(indicies[None] - indicies[:, None])) / (mass * dg**2 * (indicies[None] - indicies[:, None])**2)
     np.fill_diagonal(T_n, ((hbar ** 2) * np.pi ** 2) / (6 * mass * dg ** 2))
-    return T_n
+    return sparse.csr_matrix(T_n)
