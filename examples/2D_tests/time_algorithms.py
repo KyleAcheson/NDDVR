@@ -34,7 +34,7 @@ def run_cm_dvr(grids, masses, v, neig, ndims):
 def run_algorithm(algorithm, grids, masses, v, neig, ndims):
     calculator = dvr.Calculator(algorithm, tridiag=True)
     ps_energies, ps_wfs = calculator.solve_nd(grids, masses, v, neig, ndim=ndims)
-    ps_energies, ps_wfs = wfu.evaluate_energies(ps_wfs, grids, v, masses, neig, ndim=ndims, normalise=True)
+    #ps_energies, ps_wfs = wfu.evaluate_energies(ps_wfs, grids, v, masses, neig, ndim=ndims, normalise=True)
 
 
 def time_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nruns=5):
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     #pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/harmonic/morse'
     #wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/timings'
     pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic/morse'
-    wdir = '/storage/chem/msszxt/ND_Tests/output/nodx/N10_rms_tfunc/simple/timings'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/N10_rms_tfunc/simple/timings_nofft'
 
     grid_sizes = ['31x31', '41x41', '51x51', '61x61', '71x71', '81x81', '91x91', '101x101']
     #grid_sizes = ['31x31', '41x41', '51x51', '61x61', '71x71']
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     neig = 3
     nruns = 3
 
-    algorithms = rms_tfunc_nodx_N10_algorithms
+    algorithms = rms_tfunc_N10_algorithms
     #algorithms = {'131': algorithm_131}
 
     time_algorithms(pdir, wdir, grid_sizes, algorithms, masses, ndims, neig, nruns)
