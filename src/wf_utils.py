@@ -87,6 +87,7 @@ def position_to_momentum_nd(wfx, grids):
 
 def evaluate_energies_nd(wf, grids, v, masses, neig):
     shape = tuple(len(grid) for grid in grids)
+    #v = v.reshape(*shape)
     energies = np.zeros(neig)
     for eig in range(neig):
         wfx = wf[:, eig].reshape(*shape)
