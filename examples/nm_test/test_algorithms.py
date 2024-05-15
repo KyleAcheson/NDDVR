@@ -45,30 +45,26 @@ def write_wfs(wfs, neig, out_dir, algorithm, format='%10.12f'):
         np.savetxt(f, wfs, fmt=format, header=labels)
 
 
-def test_algorithms(wdir, pdir, ptypes, grid_size, algorithms, masses, ndims, neig):
+def test_algorithms(wdir, pdir, grid, algorithms, mass, ndims, neig):
 
-    for ptype in ptypes:
-        pot_dir = f'{pdir}/{ptype}/{grid_size}'
-        potential_files = get_potential_files(pot_dir)
-        grid_file = get_grid_files(pot_dir)
-        for i, file in enumerate(potential_files):
-            out_dir = f'{wdir}/{ptype}/{grid_size}/P{i}/'
-            if not os.path.exists(out_dir):
-                os.makedirs(out_dir)
-            v, grids = potf.load_potential(file, grid_file, ndims, order='F')
-            with open(f'{out_dir}/input_files.txt', 'w') as f:
-                f.write(f'{file}\n')
-                f.write(f'{grid_file}')
-            calculator = dvr.Calculator(colbert_miller)
-            exact_energies, exact_wfs = calculator.solve_nd(grids, masses, v, neig, ndim=ndims)
-            write_energies(exact_energies, out_dir, 'cm_dvr')
-            write_wfs(exact_wfs, neig, out_dir, 'cm_dvr')
-            for algo_name, algorithm in algorithms.items():
-                calculator.algorithm = algorithm
-                ps_energies, ps_wfs = calculator.solve_nd(grids, masses, v, neig, ndim=ndims)
-                ps_energies, ps_wfs = wfu.evaluate_energies(ps_wfs, grids, v, masses, neig, ndim=ndims, normalise=True)
-                write_energies(ps_energies, out_dir, algo_name)
-                write_wfs(ps_wfs, neig, out_dir, algo_name)
+    e = np.genfromtxt(f'{pdir}/energies_raw.txt')
+    v = e - np.min(e)
+    #v *= 219474.63
+    #v *= 27.2114
+    print(np.min(v), np.max(v))
+    out_dir = f'{wdir}'
+    calculator = dvr.Calculator(colbert_miller)
+    exact_energies, exact_wfs = calculator.solve_1d(grid, v, mass, neig)
+    exact_energies *= 219474.63
+    write_energies(exact_energies, out_dir, 'cm_dvr')
+    write_wfs(exact_wfs, neig, out_dir, 'cm_dvr')
+    for algo_name, algorithm in algorithms.items():
+        calculator.algorithm = algorithm
+        ps_energies, ps_wfs = calculator.solve_1d(grid, v, mass, neig)
+        ps_energies, ps_wfs = wfu.evaluate_energies(ps_wfs, grid, v, mass, neig, ndim=ndims, normalise=True)
+        ps_energies *= 219474.63
+        write_energies(ps_energies, out_dir, algo_name)
+        write_wfs(ps_wfs, neig, out_dir, algo_name)
 
 def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
 
@@ -93,10 +89,10 @@ def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
             for i, potential in enumerate(potential_files):
                 problem_dir = f'{grid_dir}/P{i}'
                 exact_file = f'{problem_dir}/cm_dvr_energies.dat'
-                dvr_energies[i, :] = np.genfromtxt(exact_file)
+                dvr_energies[i, :] = np.genfromtxt(exact_file)[:neig]
                 for j, algorithm in enumerate(algorithms.keys()):
                     ps_file = f'{problem_dir}/{algorithm}_energies.dat'
-                    ps_energies[j, i, :] = np.genfromtxt(ps_file)
+                    ps_energies[j, i, :] = np.genfromtxt(ps_file)[:neig]
             ps_energies_all.append(ps_energies)
             dvr_energies_all.append(dvr_energies)
         dvr_energies_all = np.asarray(dvr_energies_all)
@@ -147,9 +143,6 @@ def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
 
 
 
-
-
-
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
@@ -158,23 +151,18 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    #pdir = '/storage/chem/msszxt/ND_Tests/potentials/harmonic'
-    #wdir = '/storage/chem/msszxt/ND_Tests/output/nodx/N10_rms_tfunc/simple'
-    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/small_harmonic'
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/outputs/small_range'
+    pdir = '/home/kyle/PycharmProjects/NDDVR/examples/nm_test/asym'
+    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/nm_test/asym/outputs'
 
-    masses = [1, 1]
-    ndims = 2
+    mass = 1
+    ndims = 1
     neig = 3
-    conv_thresh = 0.005
+    conv_thresh = 0.01
+
+    grid = np.linspace(-25, 25, 41)
 
     algorithms = rms_tfunc_N10_algorithms
-    #ptypes = ['harmonic', 'anharmonic', 'morse', 'double_well', 'asym_double_well']
-    ptypes = ['harmonic']
 
     grid_size = args.grid_size
 
-    if args.plot:
-        plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh)
-    else:
-        test_algorithms(wdir, pdir, ptypes, grid_size, algorithms, masses, ndims, neig)
+    test_algorithms(wdir, pdir, grid, algorithms, mass, ndims, neig)

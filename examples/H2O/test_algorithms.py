@@ -47,10 +47,12 @@ def write_wfs(wfs, neig, out_dir, algorithm, format='%10.12f'):
 
 def test_algorithms(wdir, pdir, grids, algorithms, masses, ndims, neig):
 
-    e = np.genfromtxt(f'{pdir}/energies_raw.txt')
-    v = e - np.min(e)
+    v = np.genfromtxt(f'{pdir}/energies_cut_ev.txt')
+    #v = e - np.min(e)
+    #v *= 219474.63
+    v /= 27.2114
     print(np.min(v), np.max(v))
-    v = v.reshape(21, 21, 21)
+    v = v.reshape(41, 31, 31)
     out_dir = f'{wdir}'
     calculator = dvr.Calculator(colbert_miller)
     exact_energies, exact_wfs = calculator.solve_nd(grids, masses, v, neig, ndim=ndims)
@@ -151,7 +153,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    pdir = '/home/kyle/PycharmProjects/QMDAnalysis/data/Potential/H2O/pes'
+    pdir = '/home/kyle/PycharmProjects/NDDVR/examples/H2O'
     wdir = '/home/kyle/PycharmProjects/NDDVR/examples/H2O/outputs'
 
     masses = [1, 1, 1]
@@ -159,10 +161,10 @@ if __name__ == "__main__":
     neig = 3
     conv_thresh = 0.01
 
-    qgrid = np.linspace(-0.5, 0.5, 21)
-    grids = []
-    for i in range(ndims):
-        grids.append(qgrid)
+    qgrid1 = np.linspace(-1, 1, 41)
+    qgrid2 = np.linspace(-1, 0.5, 31)
+    qgrid3 = np.linspace(-0.75, 0.75, 31)
+    grids = [qgrid1, qgrid2, qgrid3]
 
     algorithms = rms_tfunc_N10_algorithms
 

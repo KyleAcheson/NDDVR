@@ -1,0 +1,16 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module fh2opes ! in 
+    interface  ! in :fh2opes
+        subroutine vibpot(rij,v,n) ! in :fh2opes:h2opes.f
+            real*8 dimension(n,3),intent(in) :: rij
+            real*8 dimension(n),depend(n),intent(out) :: v
+            integer, optional,check(shape(rij, 0) == n),depend(rij) :: n=shape(rij, 0)
+        end subroutine vibpot
+    end interface 
+end python module fh2opes
+
+! This file was auto-generated with f2py (version:1.25.2).
+! See:
+! https://web.archive.org/web/20140822061353/http://cens.ioc.ee/projects/f2py2e
