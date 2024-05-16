@@ -120,7 +120,7 @@ def full_kinetic_matrix(grids, masses, sizes, dim):
     return result_matrix
 
 
-def construct_hamiltonians(n, nd):
+def construct_hamiltonians(n, nd, full=False):
     masses = np.array([1 for i in range(nd)])
     dims = np.array([n for i in range(nd)])
     ntotal = np.prod(dims)
@@ -135,33 +135,41 @@ def construct_hamiltonians(n, nd):
         grids.append(grid)
 
     H_iter = Hamiltonian(pot, kinetic_1d_mats, dims)
-    H_full = full_hamiltonian(pot, grids, masses, dims, nd)
-    return H_iter, H_full
+    if full:
+        H_full = full_hamiltonian(pot, grids, masses, dims, nd)
+        return  H_iter, H_full
+    else:
+        return H_iter
 
 
 def time_eigsh_full(H, neig):
     e1, v1 = sparse.linalg.eigsh(H, k=neig, which='SA')
 
+def time_matvec(H, x):
+    H.matvec(x)
 
 if __name__ == "__main__":
     import exact_solvers as es
     import timeit
     
-    n = 5
+    n = 21
     nds = [2, 3, 4, 5]
     nt = len(nds)
-    neig = 3
-    nr = 3
+    neig = 1
+    nr = 1
 
     tf = np.zeros(nt)
     ti = np.zeros(nt)
     for i in range(nt):
-        H_iter, H_full = construct_hamiltonians(n, nds[i])
-        t1 = min(timeit.repeat(lambda: time_eigsh_full(H_full, neig), repeat=nr, number=1))
+        H_iter = construct_hamiltonians(n, nds[i], full=False)
+        #x = np.random.rand(n**nds[i])
+        #t1 = min(timeit.repeat(lambda: time_matvec(H_iter, x), repeat=nr, number=1))
+        #t1 = min(timeit.repeat(lambda: time_eigsh_full(H_full, neig), repeat=nr, number=1))
         t2 = min(timeit.repeat(lambda: time_eigsh_full(H_iter, neig), repeat=nr, number=1))
-        tf[i] = t1
+        #tf[i] = t1
+        print(t2)
         ti[i] = t2
 
-    print(tf/ti)
+    print(ti)
 
     breakpoint()

@@ -43,7 +43,7 @@ def plot_transition_convergence(wdir, solver_name, ngrids, ntransitions, exact=T
 
 def full_cmdvr(q_grids, v, neig):
     masses = [1, 1, 1, 1, 1, 1]
-    calculator = dvr.Calculator(colbert_miller)
+    calculator = dvr.Calculator(colbert_miller, use_operators=True)
     exact_energies, exact_wfs = calculator.solve_nd(q_grids, masses, v, neig, ndim=6)
     exact_energies *= AU2WAVNUM
     return exact_energies
@@ -52,7 +52,7 @@ def full_cmdvr(q_grids, v, neig):
 def full_dvr(q_grids, v, neig, solver):
     masses = [1, 1, 1, 1, 1, 1]
     ngrid = len(q_grids[0])
-    calculator = dvr.Calculator(solver)
+    calculator = dvr.Calculator(solver, use_operators=False)
     exact_energies, exact_wfs = calculator.solve_nd(q_grids, masses, v, neig, ndim=6)
     v = v.reshape(ngrid, ngrid, ngrid, ngrid, ngrid, ngrid)
     exact_energies, exact_wfs = wfu.evaluate_energies(exact_wfs, q_grids, v, masses, neig, ndim=6, normalise=True)
@@ -76,9 +76,9 @@ def run_full_dvr(wdir, v, q_grids, solver_name, neig):
     return tranistion_energies
 
 
-def dvr_exact_pot(solver_name):
-    ngrids = [15]
-    neig = 20
+def dvr_exact_pot(solver_name, in_dir, out_dir):
+    ngrids = [11]
+    neig = 3
     qmins = [-95, -55, -50, -22.5, -22.5, -20]
     qmaxs = [60, 55, 55, 30, 22.5, 25]
     variable_modes = [0, 1, 2, 3, 4, 5]
@@ -93,15 +93,15 @@ def dvr_exact_pot(solver_name):
         q4 = np.linspace(qmins[4], qmaxs[4], ngrid)
         q5 = np.linspace(qmins[5], qmaxs[5], ngrid)
         q_grids = [q0, q1, q2, q3, q4, q5]
-        input_dir = f'./inputs/ngrid_{ngrid}'
+        input_dir = f'{in_dir}/ngrid_{ngrid}'
         t1 = time.time()
         v = np.genfromtxt(f'{input_dir}/exact_potential.txt')
         t2 = time.time()
         print('pot read time: ', t2-t1)
-        out_dir = f'./results/exact_pot/ngrid_{ngrid}'
-        te = run_full_dvr(out_dir, v, q_grids, solver_name, neig)
+        output_dir = f'{out_dir}/ngrid_{ngrid}'
+        te = run_full_dvr(output_dir, v, q_grids, solver_name, neig)
         transitions_all[i, :] = te
-    np.savetxt(f'./results/exact_pot/{solver_name}_exact_transitions.txt', transitions_all)
+    np.savetxt(f'{output_dir}/{solver_name}_exact_transitions.txt', transitions_all)
     print('done all calculations')
     breakpoint()
 
@@ -109,5 +109,7 @@ def dvr_exact_pot(solver_name):
 if __name__ == "__main__":
     import time
     solver = 'A116'
-    #solver = 'cm_dvr'
-    dvr_exact_pot(solver)
+    #solver = 'cm_dvr'`
+    in_dir = '/home/kyle/DVR_Applications/NH3/inputs'
+    out_dir = '/home/kyle/DVR_Applications/NH3/results'
+    dvr_exact_pot(solver, in_dir, out_dir)
