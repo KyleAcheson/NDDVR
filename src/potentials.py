@@ -1,14 +1,13 @@
 import numpy as np
 from scipy.stats import qmc
 from sklearn.gaussian_process import GaussianProcessRegressor
-import fh2opes
-import fnh3pes
+import fast_dvr.h2opes
+import fast_dvr.nh3pes
 from numba import njit
 
 BOHR = 0.529177
 AU2EV = 27.2114
 AU2WAVNUM = 219474.63
-
 
 def load_potential(pot_file, grid_file, ndim, order):
     pot = np.genfromtxt(pot_file, skip_header=1)
@@ -37,17 +36,17 @@ def harmonic_potential_3d(x, y, z, kx=1.0, ky=1.0, kz=1.0, mx=1.0, my=1.0, mz=1.
 def ammpot4(rij):
     """
     Wrapper for AMMPOT4 (NH3 potential).
-    
+
     NOTE: The AMMPOT4 Fortran library returns energy in cm^-1 - this
     python wrapper converts energies to a.u. and returns them.
-    
+
     :param rij: the internal coordinates in order
                 (R1, R2, R3, A12, A13, A23 (the 3 bond lengths and angles)),
                 with bond lengths in angstroem and angles in degrees.
     :return: v: energy in Hartrees.
     """
     n, _ = rij.shape
-    v = fnh3pes.nh3pot(r=rij, np=n)
+    v = nh3pes.nh3pot(r=rij, np=n)
     return v / AU2WAVNUM
 
 
@@ -57,7 +56,7 @@ def partridge_schwenke_potential(rij):
         number of points and each column an internal coordinate.
         NOTE: rij[:, 0:2] = O-H distances in a.u.,
               rij[:, -1] = HOH angle in radians. """
-    v = fh2opes.vibpot(n=rij.shape[0], rij=rij)
+    v = h2opes.vibpot(n=rij.shape[0], rij=rij)
     return v
 
 

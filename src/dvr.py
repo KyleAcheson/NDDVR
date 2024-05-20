@@ -2,7 +2,7 @@ import numpy as np
 #import line_profiler
 import scipy.linalg as spyl
 from scipy import sparse
-import src.operators as op
+import fast_dvr.operators as op
 
 
 class Calculator:
@@ -106,11 +106,8 @@ class Calculator:
 
 
 if __name__ == "__main__":
-    import potentials as pots
-    import synthesised_solvers as ss
-    import exact_solvers as es
-    import wf_utils as wfu
-    import memory_profiler as mp
+    import fast_dvr.potentials as pots
+    import fast_dvr.exact_solvers as es
 
     # TEST 2D POTENTIAL FROM FILE
     pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials'

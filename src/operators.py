@@ -149,7 +149,7 @@ def time_matvec(H, x):
     H.matvec(x)
 
 if __name__ == "__main__":
-    import exact_solvers as es
+    import fast_dvr.exact_solvers as es
     import timeit
     
     n = 21

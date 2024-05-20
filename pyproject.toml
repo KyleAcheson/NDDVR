@@ -1,0 +1,29 @@
+[build-system]
+build-backend = 'mesonpy'
+requires = ['meson-python', "numpy ~= 1.26"]
+
+[project]
+name = "fast_dvr"
+version = "0.1.0"
+description = """A python package for calculating vibrational transitions
+and eigenstates using discrete variable representation."""
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Kyle Acheson", email = "kyle.acheson@warwick.ac.uk"},
+]
+classifiers = []
+urls = {homepage = "https://github.com/KyleAcheson/NDDVR"}
+
+dependencies = [
+    "numpy ~=1.26",
+    "scipy ~=1.11",
+    "numba ~=0.59.0",
+    "scikit-learn ~=1.4.1",
+    "memory-profiler ~=0.61.0",
+    "line-profiler ~=4.1.2",
+    "matplotlib ~=3.8.2"
+]
+
+[tool.setuptools]
+package-dir = {"fast_dvr" = "src"}
