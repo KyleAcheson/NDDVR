@@ -4,13 +4,11 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../src'),
-                 os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
-import src.dvr as dvr
-import src.potentials as pot
-from src.synthesised_solvers import *
-from src.exact_solvers import *
-import src.wf_utils as wfu
+import fast_dvr.dvr as dvr
+import fast_dvr.potentials as pot
+from fast_dvr.synthesised_solvers import *
+from fast_dvr.exact_solvers import *
+import fast_dvr.wf_utils as wfu
 
 BOHR = 0.529177
 AU2WAVNUM = 219474.63
@@ -52,7 +50,7 @@ def full_cmdvr(q_grids, v, neig):
 def full_dvr(q_grids, v, neig, solver):
     masses = [1, 1, 1, 1, 1, 1]
     ngrid = len(q_grids[0])
-    calculator = dvr.Calculator(solver, use_operators=False)
+    calculator = dvr.Calculator(solver, use_operators=True)
     exact_energies, exact_wfs = calculator.solve_nd(q_grids, masses, v, neig, ndim=6)
     v = v.reshape(ngrid, ngrid, ngrid, ngrid, ngrid, ngrid)
     exact_energies, exact_wfs = wfu.evaluate_energies(exact_wfs, q_grids, v, masses, neig, ndim=6, normalise=True)
@@ -99,11 +97,13 @@ def dvr_exact_pot(solver_name, in_dir, out_dir):
         t2 = time.time()
         print('pot read time: ', t2-t1)
         output_dir = f'{out_dir}/ngrid_{ngrid}'
+        t1 = time.time()
         te = run_full_dvr(output_dir, v, q_grids, solver_name, neig)
+        t2 = time.time()
+        print('dvr time: ', t2-t1)
         transitions_all[i, :] = te
     np.savetxt(f'{output_dir}/{solver_name}_exact_transitions.txt', transitions_all)
     print('done all calculations')
-    breakpoint()
 
 
 if __name__ == "__main__":
