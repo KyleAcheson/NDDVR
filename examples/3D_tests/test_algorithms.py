@@ -6,11 +6,11 @@ import numpy as np
 sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '..'),
                  os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
 
-import src.dvr as dvr
-import src.potentials as potf
-from src.synthesised_solvers import *
-from src.exact_solvers import *
-import src.wf_utils as wfu
+import fast_dvr.dvr as dvr
+import fast_dvr.potentials as potf
+from fast_dvr.synthesised_solvers import *
+from fast_dvr.exact_solvers import *
+import fast_dvr.wf_utils as wfu
 from natsort import natsorted
 
 
@@ -158,10 +158,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    pdir = '/storage/chem/msszxt/ND_Tests/potentials/3D'
-    wdir = '/storage/chem/msszxt/ND_Tests/output/3D/N10_rms_tfunc/simple'
-    #pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/3D'
-    #wdir = '/home/kyle/PycharmProjects/NDDVR/examples/3D_tests/outputs'
+    #pdir = '/storage/chem/msszxt/ND_Tests/potentials/3D'
+    #wdir = '/storage/chem/msszxt/ND_Tests/output/3D/N10_rms_tfunc/simple'
+    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/3D'
+    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/3D_tests/outputs'
 
     masses = [1, 1, 1]
     ndims = 3

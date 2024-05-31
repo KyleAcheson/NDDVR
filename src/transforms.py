@@ -87,6 +87,7 @@ def cart2norm(coordinates, eq_coordinates, masses, transformation_matrix):
     return transformation_matrix.T @ coords.flatten()
 
 
+@njit
 def _mass_weighted_displacements(coordinates, eq_coordinates, masses):
     mw_dcoords = (coordinates - eq_coordinates) * np.sqrt(masses[:, np.newaxis])
     return mw_dcoords

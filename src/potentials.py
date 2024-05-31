@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.stats import qmc
 from sklearn.gaussian_process import GaussianProcessRegressor
-import fast_dvr.h2opes
-import fast_dvr.nh3pes
+import fast_dvr.h2opes as h2opes
+import fast_dvr.nh3pes as nh3pes
 from numba import njit
 
 BOHR = 0.529177
@@ -92,13 +92,21 @@ def partridge_schwenke_hessian(fname=None):
         np.savetxt(fname, hess)
     return hess
 
-def ammpot4_hessian(fname=None):
+def ammpot4_hessian(fname=None, **kwargs):
     #rint = np.array([1.01, 1.01, 1.01, 108, 108, 108])
-    eq_coords = np.array([[0.0, 0.0, 0.0],
-                          [0.0, -0.9377, -0.3816],
-                          [0.8121, 0.4689, -0.3816],
-                          [-0.8121, 0.4689, -0.3816]])
-    hess = _hessian(eq_coords, ammpot4_cart, 0.001*BOHR)
+    try:
+        coords = kwargs['coords']
+    except KeyError:
+        #coords = np.array([[0.0, 0.0, 0.0],
+        #                   [0.0, -0.9377, -0.3816],
+        #                   [0.8121, 0.4689, -0.3816],
+        #                   [-0.8121, 0.4689, -0.3816]])
+        coords = np.array([[0.0, 0.0, 0.0],
+                          [1.0128, 0.0, 0.0],
+                          [-0.296621, 0.968390, 0.0],
+                          [-0.296621, -0.401080, -0.881427]])
+
+    hess = _hessian(coords, ammpot4_cart, 0.001*BOHR)
     if fname:
         np.savetxt(fname, hess)
     return hess

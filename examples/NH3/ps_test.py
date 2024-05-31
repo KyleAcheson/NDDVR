@@ -74,11 +74,39 @@ def run_full_dvr(wdir, v, q_grids, solver_name, neig):
     return tranistion_energies
 
 
+def run_dvr_1d(solver_name, in_dir, out_dir):
+    ngrid = 101
+    neig = 2
+    #qmins = [-95, -55, -50, -22.5, -25, -25]
+    #qmaxs = [60, 55, 55, 30, 25, 25]
+    qmins = [-60, -40, -40, -20, -20, -20]
+    qmaxs = [40, 40, 40, 20, 20, 20]
+
+    variable_modes = [0, 1, 2, 3, 4, 5]
+    tot_modes = len(variable_modes)
+    transitions = np.zeros(tot_modes)
+    output_dir = f'{out_dir}/ngrid_{ngrid}'
+    input_dir = f'{in_dir}/ngrid_{ngrid}'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    for i in range(tot_modes):
+        q = np.linspace(qmins[i], qmaxs[i], ngrid)
+        v = np.genfromtxt(f'{input_dir}/nm{i}_potential.txt')
+        calculator = dvr.Calculator(solver)
+        energies, wfs = calculator.solve_1d(q, v, 1, neig)
+        energies *= AU2WAVNUM
+        transition_energy = energies[1] - energies[0]
+        transitions[i] = transition_energy
+    np.savetxt(f'{output_dir}/nm_energies.txt', transitions)
+
+
 def dvr_exact_pot(solver_name, in_dir, out_dir):
     ngrids = [11]
     neig = 3
-    qmins = [-95, -55, -50, -22.5, -22.5, -20]
-    qmaxs = [60, 55, 55, 30, 22.5, 25]
+    #qmins = [-95, -55, -50, -22.5, -22.5, -20]
+    #qmaxs = [60, 55, 55, 30, 22.5, 25]
+    qmins = [-60, -40, -40, -20, -20, -20]
+    qmaxs = [40, 40, 40, 20, 20, 20]
     variable_modes = [0, 1, 2, 3, 4, 5]
 
     tot_grids = len(ngrids)
@@ -108,8 +136,11 @@ def dvr_exact_pot(solver_name, in_dir, out_dir):
 
 if __name__ == "__main__":
     import time
-    solver = 'A116'
-    #solver = 'cm_dvr'`
-    in_dir = '/home/kyle/DVR_Applications/NH3/inputs'
-    out_dir = '/home/kyle/DVR_Applications/NH3/results'
-    dvr_exact_pot(solver, in_dir, out_dir)
+    #solver = 'A116'
+    solver = colbert_miller
+    #in_dir = '/home/kyle/DVR_Applications/NH3/inputs'
+    in_dir = '/home/kyle/DVR_Applications/NH3/normal_modes/smaller_range/pots'
+    #out_dir = '/home/kyle/DVR_Applications/NH3/results'
+    out_dir = '/home/kyle/DVR_Applications/NH3/normal_modes/smaller_range/results'
+    run_dvr_1d(solver, in_dir, out_dir)
+    #dvr_exact_pot(solver, in_dir, out_dir)

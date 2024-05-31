@@ -99,7 +99,7 @@ def algorithm_29(grid, mass, hbar=1):
     dx = grid[1] - grid[0]
 
     exp_term = np.diag(np.exp((grid[:, None] - grid[None, :])**2), k=-1)
-    
+
     diagonal = np.full(ng, -np.pi / 4.0)
     diag_pm1 = np.full(ng-1, np.pi * ((1/3) - (exp_term / (6 * dx**2))))
     T_n = np.diag(diagonal) + np.diag(diag_pm1, k=-1) + np.diag(diag_pm1, k=1)
