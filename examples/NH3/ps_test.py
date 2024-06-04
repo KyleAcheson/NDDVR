@@ -75,16 +75,15 @@ def run_full_dvr(wdir, v, q_grids, solver_name, neig):
 
 
 def run_dvr_1d(solver_name, in_dir, out_dir):
-    ngrid = 101
-    neig = 2
-    #qmins = [-95, -55, -50, -22.5, -25, -25]
-    #qmaxs = [60, 55, 55, 30, 25, 25]
-    qmins = [-60, -40, -40, -20, -20, -20]
-    qmaxs = [40, 40, 40, 20, 20, 20]
+    ngrid = 21
+    neig = 4
+    qmins = [-80, -40, -40, -20, -20, -20]
+    qmaxs = [80, 40, 40, 20, 20, 20]
 
     variable_modes = [0, 1, 2, 3, 4, 5]
     tot_modes = len(variable_modes)
-    transitions = np.zeros(tot_modes)
+    transitions = np.zeros((tot_modes, neig-1))
+    all_energies = np.zeros((tot_modes, neig))
     output_dir = f'{out_dir}/ngrid_{ngrid}'
     input_dir = f'{in_dir}/ngrid_{ngrid}'
     if not os.path.exists(output_dir):
@@ -94,20 +93,22 @@ def run_dvr_1d(solver_name, in_dir, out_dir):
         v = np.genfromtxt(f'{input_dir}/nm{i}_potential.txt')
         calculator = dvr.Calculator(solver)
         energies, wfs = calculator.solve_1d(q, v, 1, neig)
+        if solver != colbert_miller:
+            energies, wfs = wfu.evaluate_energies(wfs, q, v, 1, neig, ndim=1, normalise=True)
         energies *= AU2WAVNUM
-        transition_energy = energies[1] - energies[0]
-        transitions[i] = transition_energy
-    np.savetxt(f'{output_dir}/nm_energies.txt', transitions)
+        all_energies[i, :] = energies
+        transition_energy = energies[1:] - energies[0]
+        transitions[i, :] = transition_energy
+    np.savetxt(f'{output_dir}/trans_energies.txt', transitions)
+    np.savetxt(f'{output_dir}/raw_energies.txt', all_energies)
 
 
 def dvr_exact_pot(solver_name, in_dir, out_dir):
-    ngrids = [11]
-    neig = 3
-    #qmins = [-95, -55, -50, -22.5, -22.5, -20]
-    #qmaxs = [60, 55, 55, 30, 22.5, 25]
-    qmins = [-60, -40, -40, -20, -20, -20]
-    qmaxs = [40, 40, 40, 20, 20, 20]
+    ngrids = [21]
+    neig = 10
     variable_modes = [0, 1, 2, 3, 4, 5]
+    qmins = np.array([-80, -40, -40, -20, -20, -20])
+    qmaxs = np.array([80, 40, 40, 20, 20, 20])
 
     tot_grids = len(ngrids)
     transitions_all = np.zeros((tot_grids, neig-1))
@@ -129,18 +130,16 @@ def dvr_exact_pot(solver_name, in_dir, out_dir):
         te = run_full_dvr(output_dir, v, q_grids, solver_name, neig)
         t2 = time.time()
         print('dvr time: ', t2-t1)
-        transitions_all[i, :] = te
-    np.savetxt(f'{output_dir}/{solver_name}_exact_transitions.txt', transitions_all)
     print('done all calculations')
 
 
 if __name__ == "__main__":
     import time
-    #solver = 'A116'
-    solver = colbert_miller
+    solver = 'A116'
+    #solver = colbert_miller
     #in_dir = '/home/kyle/DVR_Applications/NH3/inputs'
-    in_dir = '/home/kyle/DVR_Applications/NH3/normal_modes/smaller_range/pots'
+    in_dir = '/home/kyle/DVR_Applications/NH3/ammpot4/d3h'
     #out_dir = '/home/kyle/DVR_Applications/NH3/results'
-    out_dir = '/home/kyle/DVR_Applications/NH3/normal_modes/smaller_range/results'
-    run_dvr_1d(solver, in_dir, out_dir)
-    #dvr_exact_pot(solver, in_dir, out_dir)
+    out_dir = '/home/kyle/DVR_Applications/NH3/ammpot4/d3h_results'
+    #run_dvr_1d(solver, in_dir, out_dir)
+    dvr_exact_pot(solver, in_dir, out_dir)

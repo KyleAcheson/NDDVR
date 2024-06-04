@@ -92,15 +92,18 @@ def partridge_schwenke_hessian(fname=None):
         np.savetxt(fname, hess)
     return hess
 
-def ammpot4_hessian(fname=None, **kwargs):
+def ammpot4_hessian(fname=None, dh3_minima=False):
     #rint = np.array([1.01, 1.01, 1.01, 108, 108, 108])
-    try:
-        coords = kwargs['coords']
-    except KeyError:
-        #coords = np.array([[0.0, 0.0, 0.0],
-        #                   [0.0, -0.9377, -0.3816],
-        #                   [0.8121, 0.4689, -0.3816],
-        #                   [-0.8121, 0.4689, -0.3816]])
+    #coords = np.array([[0.0, 0.0, 0.0],
+    #                   [0.0, -0.9377, -0.3816],
+    #                   [0.8121, 0.4689, -0.3816],
+    #                   [-0.8121, 0.4689, -0.3816]])
+    if dh3_minima:
+        coords = np.array([[0.0, 0.0, 0.0],
+                               [0.9988, 0.0, 0.0],
+                               [-0.499400, 0.864986, 0.0],
+                               [-0.499400, -0.864986, 0.0]])
+    else:
         coords = np.array([[0.0, 0.0, 0.0],
                           [1.0128, 0.0, 0.0],
                           [-0.296621, 0.968390, 0.0],

@@ -30,7 +30,7 @@ def cart2norm_grid(cartesian_potential, eq_coordinates, masses, transformation_m
     return qcoordinates
 
 
-def get_normal_modes(hessian, masses, nvibs):
+def get_normal_modes(hessian, masses, nvibs, imaginary=False):
     """ Diagonalise the Hessian (gets mass weighted)
         and calculate frequencies (cm^-1) and normal modes.
         Parameters
@@ -52,7 +52,9 @@ def get_normal_modes(hessian, masses, nvibs):
         """
     natoms = len(masses)
     fconstants_au, modes = _diag_hessian(hessian, masses)
-    freqs = np.sqrt(np.abs(fconstants_au))  # in a.u.
+    freqs = np.lib.scimath.sqrt(fconstants_au)  # in a.u.
+    if not imaginary and np.iscomplexobj(fconstants_au):
+        freqs = freqs.real - np.abs(freqs.imag)
     freqs_wavenums = freqs * AU2Hz / LIGHT_SPEED_SI * 1e-2
     normal_modes = np.einsum('z,zri->izr', masses ** -.5, modes.reshape(natoms, 3, -1))
     return freqs_wavenums[-nvibs:], normal_modes, modes
