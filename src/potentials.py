@@ -32,6 +32,14 @@ def harmonic_potential_2d(x, y, kx=1.0, ky=1.0, mx=1.0, my=1.0):
 def harmonic_potential_3d(x, y, z, kx=1.0, ky=1.0, kz=1.0, mx=1.0, my=1.0, mz=1.0):
     return 0.5 * (kx * x**2 / mx + ky * y**2 / my + kz * z**2 / mz)
 
+def harmonic_potential_nd(xs, ks):
+    ndims = len(xs)
+    v = np.zeros(xs[0].shape)
+    for i in range(ndims):
+        v += ks[i] * xs[i]**2
+    v *= 0.5
+    return v
+
 
 def ammpot4(rij):
     """

@@ -184,7 +184,7 @@ def generate_2d_potential(wdir, coords, hessian, variable_modes, qmins, qmaxs, n
 
     q_prod = q_prod[:, inds]
     min_pot_ind = np.argmin(v_prod)
-    print(f'min vpot: {v_prod[min_pot_ind]}')
+    print(f'min vpot: {v_prod[min_pot_ind]*AU2WAVNUM}')
     print(f'q coords: {q_prod[min_pot_ind, :]}')
     np.savetxt(f'{outdir}/exact_potential.txt', v_prod)
     np.savetxt(f'{outdir}/exact_grid.txt', q_prod)
@@ -260,13 +260,17 @@ def generate_ncoords(outdir, coords, hessian, variable_modes, qmins, qmaxs, ngri
         qmax = [qmaxs[i]]
         variable_mode = [variable_modes[i]]
         q_prod = grids.generate_grid(tmat, qmin, qmax, variable_mode, ngrid_prod, grid_type='product')
+        #if i == 0:
+        #    q_prod[:, 9] = -8
+        #if i != 0:
+        #    q_prod[:, 6] = -47.5
         cart = tf.norm2cart_grid(q_prod, coords, masses, tmat)
         q_prod = q_prod[:, inds[i]]
         write_to_xyz(cart, ['N', 'H', 'H', 'H'], fname=f'{outdir}/nmode{variable_modes[i]}.xyz')
         v = pot.ammpot4_cart(cart)
         np.savetxt(f'{outdir}/nm{i}_potential.txt', v)
         np.savetxt(f'{outdir}/nm{i}_grid.txt', q_prod)
-        print(np.min(v*AU2WAVNUM))
+        print(q_prod[np.argmin(v)], np.min(v*AU2WAVNUM))
         plt.plot(q_prod, v*AU2WAVNUM, label=i)
     plt.xlabel('$q$')
     plt.ylabel('$v$ (cm^-1)')
@@ -302,10 +306,11 @@ if __name__ == "__main__":
     #run_exact_pot(out_dir)
 
     variable_modes = np.array([0, 1, 2, 3, 4, 5])
-    qmins = np.array([-80, -40, -40, -20, -20, -20])
-    qmaxs = np.array([80, 40, 40, 20, 20, 20])
+    variable_modes = np.array([0, 3])
+    qmins = np.array([-95, -40, -40, -31, -20, -20])
+    qmaxs = np.array([95, 40, 40, 20, 20, 20])
     ngrid_prod = 21
-    out_dir = f'/home/kyle/DVR_Applications/NH3/ammpot4/2D_scan'
+    out_dir = f'/home/kyle/DVR_Applications/NH3/ammpot4_2/2D'
 
     labels = ['N', 'H', 'H', 'H']
     masses = np.array([25527.03399, 1833.3516, 1833.3516, 1833.3516])
@@ -323,8 +328,8 @@ if __name__ == "__main__":
     hess_dh3 = pot.ammpot4_hessian(dh3_minima=True)
     #hess_dh3[:, [0, 6]] = hess_dh3[:, [6, 0]]
     #generate_ncoords(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
-    #generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
-    generate_whole_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
+    generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
+    #generate_whole_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
 
 
     breakpoint()
