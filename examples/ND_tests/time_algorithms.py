@@ -3,11 +3,11 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-import src.dvr as dvr
-import src.potentials as potf
-from src.synthesised_solvers import *
-from src.exact_solvers import *
-import src.wf_utils as wfu
+import fast_dvr.dvr as dvr
+import fast_dvr.potentials as potf
+from fast_dvr.synthesised_solvers import *
+from fast_dvr.exact_solvers import *
+import fast_dvr.wf_utils as wfu
 from natsort import natsorted
 import timeit
 
@@ -31,13 +31,68 @@ def get_grid(xmin, xmax, grid_size, ndim):
     nd_grids = np.meshgrid(*grids)
     return nd_grids, grids
 
+def ho_5d(x1, x2, x3, x4, x5):
+    ng = len(x1)
+    v = np.zeros((ng, ng, ng, ng, ng))
+    for i in range(ng):
+        for j in range(ng):
+            for k in range(ng):
+                for m in range(ng):
+                    for n in range(ng):
+                        v[i, j, k, m, n] = 0.5 * (x1[i]**2 + x2[j]**2 + x3[k]**2 + x4[m]**2 + x5[n]**2)
+    return v
+
+
+
+def ho_6d(x1, x2, x3, x4, x5, x6):
+    ng = len(x1)
+    v = np.zeros((ng, ng, ng, ng, ng, ng))
+    for i in range(ng):
+        for j in range(ng):
+            for k in range(ng):
+                for m in range(ng):
+                    for n in range(ng):
+                        for l in range(ng):
+                            v[i, j, k, m, n, l] = 0.5 * (x1[i]**2 + x2[j]**2 + x3[k]**2 + x4[m]**2 + x5[n]**2 + x6[l]**2)
+    return v
+
+
+def ho_7d(x1, x2, x3, x4, x5, x6, x7):
+    ng = len(x1)
+    v = np.zeros((ng, ng, ng, ng, ng, ng, ng))
+    for i in range(ng):
+        for j in range(ng):
+            for k in range(ng):
+                for m in range(ng):
+                    for n in range(ng):
+                        for l in range(ng):
+                            for a in range(ng):
+                                v[i, j, k, m, n, l, a] = 0.5 * (x1[i]**2 + x2[j]**2 + x3[k]**2 + x4[m]**2 + x5[n]**2 + x6[l]**2 + x7[a]**2)
+    return v
+
+
 def get_potential(ks, xmin, xmax, grid_size, ndim):
-    grids, grids_1d = get_grid(xmin, xmax, grid_size, ndim)
-    v = potf.harmonic_potential_nd(grids, ks)
+    if ndim < 5:
+        grids, grids_1d = get_grid(xmin, xmax, grid_size, ndim)
+        v = potf.harmonic_potential_nd(grids, ks)
+    elif ndim == 5:
+        grids_1d = []
+        for i in range(ndim):
+            grids_1d.append(np.linspace(xmin, xmax, grid_size))
+        v = ho_5d(*tuple(grids_1d))
+    elif ndim == 6:
+        grids_1d = []
+        for i in range(ndim):
+            grids_1d.append(np.linspace(xmin, xmax, grid_size))
+        v = ho_6d(*tuple(grids_1d))
+    elif ndim == 7:
+        grids_1d = []
+        for i in range(ndim):
+            grids_1d.append(np.linspace(xmin, xmax, grid_size))
+        v = ho_7d(*tuple(grids_1d))
     return v, grids_1d
 
 def time_ps_algorithms(wdir, xmin, xmax, grid_size, algorithms, ndims, neig, operators=False, nruns=3):
-    ps_algorithm_times = {k: [] for k in algorithms.keys()}
     num_dims = len(ndims)
     for i in range(num_dims):
         ndim = ndims[i]
@@ -49,19 +104,11 @@ def time_ps_algorithms(wdir, xmin, xmax, grid_size, algorithms, ndims, neig, ope
         v, grids = get_potential(ks, xmin, xmax, grid_size, ndim)
         for algo_name, algorithm in algorithms.items():
             algorithm_times = timeit.repeat(lambda: run_algorithm(algorithm, grids, masses, v, neig, ndim, operators), repeat=nruns, number=1)
-            best_algorithm_time = min(algorithm_times)
-            ps_algorithm_times[algo_name].append(best_algorithm_time)
+            np.savetxt(f'{out_dir}/{algo_name}_timings.tab', algorithm_times)
 
-    for algo_name in algorithms.keys():
-        algo_times = ps_algorithm_times[algo_name]
-        algo_times = [str(i) for i in algo_times]
-        with open(f'{wdir}/{algo_name}_timings.tab', 'w+') as f:
-            f.write(', '.join(algo_times))
-            
-            
+
 def time_cmdvr(wdir, xmin, xmax, grid_size, ndims, neig, operators=False, nruns=3):
 
-    cm_dvr_times = []
     num_dims = len(ndims)
     for i in range(num_dims):
         ndim = ndims[i]
@@ -72,28 +119,23 @@ def time_cmdvr(wdir, xmin, xmax, grid_size, ndims, neig, operators=False, nruns=
             os.makedirs(out_dir)
         v, grids = get_potential(ks, xmin, xmax, grid_size, ndim)
         exact_times = timeit.repeat(lambda: run_cm_dvr(grids, masses, v, neig, ndim, operators), repeat=nruns, number=1)
-        best_exact_time = min(exact_times)
-        cm_dvr_times.append(best_exact_time)
+        np.savetxt(f'{out_dir}/cm_dvr_timings.tab', exact_times)
 
-    cm_dvr_times = [str(i) for i in cm_dvr_times]
-    with open(f'{wdir}/cm_dvr_timings.tab', 'w+') as f:
-        f.write(', '.join(cm_dvr_times))
 
 
 
 if __name__ == "__main__":
 
-    wdir = '/storage/chem/msszxt/ND_Tests/output/ND/N10_rms_tfunc/timings'
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/ND_tests/timings'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/ND_timings/matvec/timings/ngrid_21'
 
     CM_DVR = True
-    op = False
-    ndims = [2, 3, 4]
+    op = True
+    ndims = [4]
 
-    nruns = 2
+    nruns = 20
     neig = 3
     xmin, xmax = -5, 5
-    grid_size = 31
+    grid_size = 21
 
     algorithms = {'A116': algorithm_116}
 
