@@ -4,13 +4,13 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../../src'),
+sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../../fast_dvr'),
                  os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
-import src.dvr as dvr
-import src.potentials as pot
-from src.synthesised_solvers import *
-from src.exact_solvers import *
-import src.wf_utils as wfu
+import fast_dvr.dvr as dvr
+import fast_dvr.potentials as pot
+from fast_dvr.synthesised_solvers import *
+from fast_dvr.exact_solvers import *
+import fast_dvr.wf_utils as wfu
 
 BOHR = 0.529177
 AU2WAVNUM = 219474.63

@@ -1,14 +1,14 @@
 import os
 import sys
 import numpy as np
-sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../src'),
+sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../fast_dvr'),
                  os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
-import src.dvr as dvr
-import src.plotting as pltg
-import src.potentials as potf
-import src.old_algorithms as sa
+import fast_dvr.dvr as dvr
+import fast_dvr.plotting as pltg
+import fast_dvr.potentials as potf
+import fast_dvr.old_algorithms as sa
 import matplotlib.pyplot as plt
-import src.wf_utils as utils
+import fast_dvr.wf_utils as utils
 
 def run_1D_comparison():
 

@@ -6,11 +6,11 @@ import numpy as np
 sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '..'),
                  os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
 
-import src.dvr as dvr
-import src.potentials as potf
-from src.synthesised_solvers import *
-from src.exact_solvers import *
-import src.wf_utils as wfu
+import fast_dvr.dvr as dvr
+import fast_dvr.potentials as potf
+from fast_dvr.synthesised_solvers import *
+from fast_dvr.exact_solvers import *
+import fast_dvr.wf_utils as wfu
 from natsort import natsorted
 import memory_profiler as mp
 

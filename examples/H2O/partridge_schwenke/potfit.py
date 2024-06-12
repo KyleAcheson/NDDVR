@@ -3,16 +3,16 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../../src'),
+sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../../fast_dvr'),
                  os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
 
-import src.dvr as dvr
-import src.potentials as pot
-from src.synthesised_solvers import *
-from src.exact_solvers import *
-import src.wf_utils as wfu
-import src.transforms as tf
-import src.grids as grids
+import fast_dvr.dvr as dvr
+import fast_dvr.potentials as pot
+from fast_dvr.synthesised_solvers import *
+from fast_dvr.exact_solvers import *
+import fast_dvr.wf_utils as wfu
+import fast_dvr.transforms as tf
+import fast_dvr.grids as grids
 import matplotlib.pyplot as plt
 from scipy.spatial import distance_matrix
 from sklearn.gaussian_process.kernels import RBF
