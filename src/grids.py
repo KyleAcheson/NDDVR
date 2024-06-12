@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import qmc
 
-def generate_grid(transformation_matrix, qmins, qmaxs, mode_indicies, ngrid, grid_type='product', **kwargs):
+def generate_grid(transformation_matrix, qmins, qmaxs, mode_indicies, ngrids, grid_type='product', **kwargs):
     """
     Generate a grid in normal mode coordinates.
     Can be a direct product grid or Sobol grid.
@@ -34,9 +34,9 @@ def generate_grid(transformation_matrix, qmins, qmaxs, mode_indicies, ngrid, gri
             raise Exception('Number of indices of variable vibrational modes must match the number of axis limits.')
     
     if grid_type == 'product':
-        grid_points = direct_product_grid(qmins, qmaxs, ngrid, ndof)
+        grid_points = direct_product_grid(qmins, qmaxs, ngrids, ndof)
     elif grid_type == 'sobol':
-        grid_points = sobol_grid(qmins, qmaxs, ngrid, ndof, **kwargs)
+        grid_points = sobol_grid(qmins, qmaxs, ngrids, ndof, **kwargs)
     else:
         raise Exception('Grid type must be either product (direct) or Sobol.')
 
@@ -47,11 +47,11 @@ def generate_grid(transformation_matrix, qmins, qmaxs, mode_indicies, ngrid, gri
     return qcoordinates
         
 
-def direct_product_grid(qmins, qmaxs, ngrid, ndof):
-    ngrid_total = ngrid**ndof
+def direct_product_grid(qmins, qmaxs, ngrids, ndof):
+    ngrid_total = np.prod(ngrids)
     grids = []
     for d in range(ndof):
-        qgrid = np.linspace(qmins[d], qmaxs[d], ngrid)
+        qgrid = np.linspace(qmins[d], qmaxs[d], ngrids[d])
         grids.append(qgrid)
     meshed_grids = np.meshgrid(*grids, indexing='ij')
     grid_points = np.column_stack([axis.flatten() for axis in meshed_grids])
