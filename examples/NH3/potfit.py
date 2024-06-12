@@ -161,9 +161,9 @@ def run_exact_pot(wdir):
         generate_exact_potential(wdir, ngrid)
         
 
-def generate_2d_potential(wdir, coords, hessian, variable_modes, qmins, qmaxs, ngrid_prod):
+def generate_2d_potential(wdir, coords, hessian, variable_modes, qmins, qmaxs, ngrid_prod, modes):
 
-    outdir = f'{wdir}/ngrid_{ngrid_prod}'
+    outdir = f'{wdir}/2D_c3v'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
@@ -188,17 +188,18 @@ def generate_2d_potential(wdir, coords, hessian, variable_modes, qmins, qmaxs, n
     print(f'q coords: {q_prod[min_pot_ind, :]}')
     np.savetxt(f'{outdir}/exact_potential.txt', v_prod)
     np.savetxt(f'{outdir}/exact_grid.txt', q_prod)
-    q0 = np.linspace(qmins[0], qmaxs[0], ngrid_prod)
-    q3 = np.linspace(qmins[3], qmaxs[3], ngrid_prod)
+    q0 = np.linspace(qmins[variable_modes[0]], qmaxs[variable_modes[0]], ngrid_prod)
+    q3 = np.linspace(qmins[variable_modes[1]], qmaxs[variable_modes[1]], ngrid_prod)
     X, Y = np.meshgrid(q0, q3)
     fig, ax = plt.subplots()
     v_prod *= AU2WAVNUM
-    levels = np.arange(0, np.max(v_prod), 500)
+    levels = np.arange(0, np.max(v_prod), 1000)
     cs = ax.contour(X, Y, v_prod.reshape(ngrid_prod, ngrid_prod).T, levels=levels)
     ax.set_xlabel('$q_0$')
     ax.set_ylabel('$q_3$')
     fig.show()
-    fig.savefig(f'{outdir}/pot_cut.png')
+    fig.savefig(f'{outdir}/pot_cut_modes{modes}.png')
+    return q_prod[min_pot_ind, :]
 
         
 def generate_whole_potential(wdir, coords, hessian, variable_modes, qmins, qmaxs, ngrid_prod):
@@ -266,7 +267,46 @@ def generate_ncoords(outdir, coords, hessian, variable_modes, qmins, qmaxs, ngri
         #    q_prod[:, 6] = -47.5
         cart = tf.norm2cart_grid(q_prod, coords, masses, tmat)
         q_prod = q_prod[:, inds[i]]
-        write_to_xyz(cart, ['N', 'H', 'H', 'H'], fname=f'{outdir}/nmode{variable_modes[i]}.xyz')
+        #write_to_xyz(cart, ['N', 'H', 'H', 'H'], fname=f'{outdir}/nmode{variable_modes[i]}.xyz')
+        v = pot.ammpot4_cart(cart)
+        np.savetxt(f'{outdir}/nm{i}_potential.txt', v)
+        np.savetxt(f'{outdir}/nm{i}_grid.txt', q_prod)
+        plt.plot(q_prod, v*AU2WAVNUM, label=i)
+    plt.xlabel('$q$')
+    plt.ylabel('$v$ (cm^-1)')
+    plt.legend()
+    plt.savefig(f'{outdir}/pot_1d_cuts.png')
+    plt.show()
+
+
+def generate_ncoords_c3v(outdir, coords, hessian, variable_modes, qmins, qmaxs, ngrid_prod, c3v_min_vals):
+
+    masses = np.array([25527.03399, 1833.3516, 1833.3516, 1833.3516])
+    ndof = len(variable_modes)
+    variable_modes = np.array(variable_modes)
+    inds = variable_modes + 6
+
+    fconsts, tmat = tf._diag_hessian(hessian, masses)
+    freqs = np.lib.scimath.sqrt(fconsts)  # in a.u.
+    freqs_wavenums = freqs * AU2Hz / LIGHT_SPEED_SI * 1e-2
+    tmat[:, [0, 6]] = tmat[:, [6, 0]]
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    fig = plt.subplots()
+    for i in range(ndof):
+        qmin = [qmins[i]]
+        qmax = [qmaxs[i]]
+        variable_mode = [variable_modes[i]]
+        q_prod = grids.generate_grid(tmat, qmin, qmax, variable_mode, ngrid_prod, grid_type='product')
+        if i == 0:
+            q_prod[:, 9] = c3v_min_vals[1]
+        if i != 0:
+            q_prod[:, 6] = c3v_min_vals[0]
+        cart = tf.norm2cart_grid(q_prod, coords, masses, tmat)
+        q_prod = q_prod[:, inds[i]]
+        #write_to_xyz(cart, ['N', 'H', 'H', 'H'], fname=f'{outdir}/nmode{variable_modes[i]}.xyz')
         v = pot.ammpot4_cart(cart)
         np.savetxt(f'{outdir}/nm{i}_potential.txt', v)
         np.savetxt(f'{outdir}/nm{i}_grid.txt', q_prod)
@@ -277,6 +317,9 @@ def generate_ncoords(outdir, coords, hessian, variable_modes, qmins, qmaxs, ngri
     plt.legend()
     plt.savefig(f'{outdir}/pot_1d_cuts.png')
     plt.show()
+
+
+
 
 def pyscf_freq(labels, coords, **kwargs):
     masses = np.array([14.007, 1.008, 1.008, 1.008])
@@ -306,11 +349,11 @@ if __name__ == "__main__":
     #run_exact_pot(out_dir)
 
     variable_modes = np.array([0, 1, 2, 3, 4, 5])
-    variable_modes = np.array([0, 3])
-    qmins = np.array([-95, -40, -40, -31, -20, -20])
-    qmaxs = np.array([95, 40, 40, 20, 20, 20])
+    #variable_modes = np.array([0, 3])
+    qmins = np.array([-80, -25, -25, -25, -15, -15])
+    qmaxs = np.array([80, 25, 25, 20, 15, 15])
     ngrid_prod = 21
-    out_dir = f'/home/kyle/DVR_Applications/NH3/ammpot4_2/2D'
+    out_dir = f'/home/kyle/DVR_Applications/NH3/ammpot4_range_scans/S6_2/ngrid_{ngrid_prod}'
 
     labels = ['N', 'H', 'H', 'H']
     masses = np.array([25527.03399, 1833.3516, 1833.3516, 1833.3516])
@@ -327,8 +370,42 @@ if __name__ == "__main__":
     #hess_dh3 = pyscf_freq(labels, dh3_coords, basis='def2-svp', units='AU', xc='B3LYP')
     hess_dh3 = pot.ammpot4_hessian(dh3_minima=True)
     #hess_dh3[:, [0, 6]] = hess_dh3[:, [6, 0]]
-    #generate_ncoords(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
-    generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
+    generate_ncoords(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
+    variable_modes = np.array([0, 1])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '01')
+    variable_modes = np.array([0, 2])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '02')
+    variable_modes = np.array([0, 4])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '04')
+    variable_modes = np.array([0, 5])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '05')
+    variable_modes = np.array([1, 2])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '12')
+    variable_modes = np.array([1, 3])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '13')
+    variable_modes = np.array([1, 4])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '14')
+    variable_modes = np.array([1, 5])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '15')
+    variable_modes = np.array([2, 3])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '23')
+    variable_modes = np.array([2, 4])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '24')
+    variable_modes = np.array([2, 5])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '25')
+    variable_modes = np.array([3, 4])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '34')
+    variable_modes = np.array([3, 5])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '35')
+    variable_modes = np.array([4, 5])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '45')
+
+
+    variable_modes = np.array([0, 3])
+    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, '03')
+    out_dir = f'{out_dir}/c3v_minima_scan'
+    variable_modes = np.array([0, 1, 2, 3, 4, 5])
+    generate_ncoords_c3v(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod, c3v_min_vals)
     #generate_whole_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
 
 
