@@ -67,7 +67,7 @@ def normalise_wf_nd(wf, grids, neig):
         wfun = wf[:, eig].reshape(*shape)
         integral = np.trapz(np.conj(wfun) * wfun, grids[0], axis=0)
         for ax in range(1, naxis):
-            integral = np.trapz(integral, grids[ax])
+            integral = np.trapz(integral, grids[ax], axis=0)
         nconst = 1.0 / np.sqrt(integral)
         wf[:, eig] *= nconst
     return wf
@@ -102,7 +102,7 @@ def potential_expec(wfx, grids, v):
     naxes = len(grids)
     integral = np.trapz(np.conj(wfx) * (v * wfx), grids[0], axis=0)
     for axis in range(1, naxes):
-        integral = np.trapz(integral, grids[axis])
+        integral = np.trapz(integral, grids[axis], axis=0)
     return integral.real
 
 
@@ -116,8 +116,8 @@ def kinetic_expec(wfp, kns, masses):
     integral = np.trapz(np.conj(wfp) * (kmat * wfp), kns[0], axis=0)
     norm = np.trapz(np.conj(wfp) * wfp, kns[0], axis=0)
     for axis in range(1, naxes):
-        integral = np.trapz(integral, kns[axis])
-        norm = np.trapz(norm, kns[axis])
+        integral = np.trapz(integral, kns[axis], axis=0)
+        norm = np.trapz(norm, kns[axis], axis=0)
     T = integral * 0.5
     T /= norm
     return T.real
