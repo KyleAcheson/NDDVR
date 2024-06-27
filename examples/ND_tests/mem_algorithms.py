@@ -109,7 +109,9 @@ def test_mem_algorithms(wdir, x_min, x_max, ngrid, dims, algorithms, neig, ops=F
             res = mp.memory_usage(proc=(run_cm_dvr, [grids, masses, v, neig, dim, ops]), max_usage=True,
                                   retval=True, include_children=True)
             dvr_memory[run] = res[0] - start_mem
-        np.savetxt(f'{out_dir}/cm_dvr_memory.tab', dvr_memory)
+        f = open(f'{out_dir}/cm_dvr_memory.tab', 'ab')
+        np.savetxt(f, dvr_memory)
+        f.close()
         for algo_name, algorithm in algorithms.items():
             ps_memory = np.zeros(nruns)
             for run in range(nruns):
@@ -117,19 +119,21 @@ def test_mem_algorithms(wdir, x_min, x_max, ngrid, dims, algorithms, neig, ops=F
                 res = mp.memory_usage(proc=(run_algorithm, [algorithm, grids, masses, v, neig, dim, ops]), max_usage=True,
                                       retval=True, include_children=True)
                 ps_memory[run] = res[0] - start_mem
-            np.savetxt(f'{out_dir}/{algo_name}_memory.tab', ps_memory)
+            f = open(f'{out_dir}/{algo_name}_memory.tab', 'ab')
+            np.savetxt(f, ps_memory)
+            f.close()
 
 
 
 if __name__ == "__main__":
 
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/ND_tests/memory4/matvec'
+    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/ND_tests/memory/full_matrix'
 
-    dims = [2, 3, 4]
-    use_ops = True
-    ngrids = [21, 25, 31]
+    dims = [4]
+    use_ops = False
+    ngrids = [31]
     neig = 3
-    nruns = 5
+    nruns = 15
 
     xmin, xmax = -5, 5
 
