@@ -6,10 +6,11 @@ A python module for solving the TISE using discrete-variable representation.
 
 ### Features
 
-- Solve ND problems using CM-DVR.
-- Solve ND problems for DVR type algorithms learned from program synthesis (`synthesised_algorithms.py`).
+- Solve ND problems using sine-DVR and CM-DVR
+- Solve ND problems using DVR type algorithms learned from program synthesis (`synthesised_algorithms.py`).
 - Contains the AMMPOT4 NH3 and Partridge-Schwenke H2O potential.
 - Contains routines for generating grids in normal and cartesian coordinates, as well as transforming between.
+- Contains routines for diagonalising the position operator to construct a DVR (HEG procedure for diagonalisation DVR).
 - Generate uniform direct product grids, or quasi-random Sobol grids for use in training ML potentials on fewer points.
 
 
