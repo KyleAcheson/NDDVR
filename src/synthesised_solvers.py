@@ -10,7 +10,7 @@ from scipy import sparse
 # N10 Algorithms #
 
 
-def algorithm_116(grid, mass, hbar=1):
+def algorithm_116(grid, mass, ng, hbar=1):
 
     ng = len(grid)
     dx = grid[1] - grid[0]
@@ -23,7 +23,7 @@ def algorithm_116(grid, mass, hbar=1):
 
     return sparse.csr_matrix(T_n)
 
-def algorithm_129(grid, mass, hbar=1):
+def algorithm_129(grid, mass, ng, hbar=1):
 
     ng = len(grid)
     dx = grid[1] - grid[0]
@@ -38,7 +38,7 @@ def algorithm_129(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_131(grid, mass, hbar=1):
+def algorithm_131(grid, mass, ng, hbar=1):
 
     ng = len(grid)
     dx = grid[1] - grid[0]
@@ -50,7 +50,7 @@ def algorithm_131(grid, mass, hbar=1):
 
     return sparse.csr_matrix(T_n)
 
-def algorithm_152(grid, mass, hbar=1):
+def algorithm_152(grid, mass, ng, hbar=1):
 
     ng = len(grid)
     dx = grid[1] - grid[0]
@@ -63,7 +63,7 @@ def algorithm_152(grid, mass, hbar=1):
 
     return sparse.csr_matrix(T_n)
 
-def algorithm_175(grid, mass, hbar=1):
+def algorithm_175(grid, mass, ng, hbar=1):
 
     ng = len(grid)
     dx = grid[1] - grid[0]
@@ -82,7 +82,7 @@ def algorithm_175(grid, mass, hbar=1):
 
 # N10 Algorithms #
 
-def algorithm_21(grid, mass, hbar=1):
+def algorithm_21(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
     L = grid[-1] - grid[0]
@@ -94,7 +94,7 @@ def algorithm_21(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_29(grid, mass, hbar=1):
+def algorithm_29(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
 
@@ -107,7 +107,7 @@ def algorithm_29(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_33(grid, mass, hbar=1):
+def algorithm_33(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
 
@@ -118,7 +118,7 @@ def algorithm_33(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_40(grid, mass, hbar=1):
+def algorithm_40(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
 
@@ -129,7 +129,7 @@ def algorithm_40(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_85(grid, mass, hbar=1):
+def algorithm_85(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
     L = grid[-1] - grid[0]
@@ -141,7 +141,7 @@ def algorithm_85(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_116b(grid, mass, hbar=1):
+def algorithm_116b(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
     L = grid[-1] - grid[0]
@@ -155,7 +155,7 @@ def algorithm_116b(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_139(grid, mass, hbar=1):
+def algorithm_139(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
     L = grid[-1] - grid[0]
@@ -167,7 +167,7 @@ def algorithm_139(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_187(grid, mass, hbar=1):
+def algorithm_187(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
     L = grid[-1] - grid[0]
@@ -179,7 +179,7 @@ def algorithm_187(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_200(grid, mass, hbar=1):
+def algorithm_200(grid, mass, ng, hbar=1):
     ng = len(grid)
     dx = grid[1] - grid[0]
     L = grid[-1] - grid[0]
@@ -203,7 +203,7 @@ def algorithm_200(grid, mass, hbar=1):
 
 # N10 Algorithms #
 
-def algorithm_16(grid, mass, hbar=1):
+def algorithm_16(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -215,7 +215,7 @@ def algorithm_16(grid, mass, hbar=1):
 
     return sparse.csr_matrix(T_n)
 
-def algorithm_19(grid, mass, hbar=1):
+def algorithm_19(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -228,7 +228,7 @@ def algorithm_19(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_75(grid, mass, hbar=1):
+def algorithm_75(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -241,7 +241,7 @@ def algorithm_75(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_91(grid, mass, hbar=1):
+def algorithm_91(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -252,7 +252,7 @@ def algorithm_91(grid, mass, hbar=1):
 
     return sparse.csr_matrix(T_n)
 
-def algorithm_124(grid, mass, hbar=1):
+def algorithm_124(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -264,7 +264,7 @@ def algorithm_124(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_129b(grid, mass, hbar=1):
+def algorithm_129b(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -277,7 +277,7 @@ def algorithm_129b(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_132(grid, mass, hbar=1):
+def algorithm_132(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -289,7 +289,7 @@ def algorithm_132(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_140(grid, mass, hbar=1):
+def algorithm_140(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -303,7 +303,7 @@ def algorithm_140(grid, mass, hbar=1):
 
 
 
-def algorithm_146(grid, mass, hbar=1):
+def algorithm_146(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
@@ -315,7 +315,7 @@ def algorithm_146(grid, mass, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-def algorithm_197(grid, mass, hbar=1):
+def algorithm_197(grid, mass, ng, hbar=1):
     ng = len(grid)
     L = grid[-1] - grid[0]
 
