@@ -133,7 +133,8 @@ def generate_whole_potential(wdir, coords, variable_modes, qmins, qmaxs, ngrids,
     tmat[:, [0, 6]] = tmat[:, [6, 0]]
 
     q_prod = grids.get_quadrature_points(q_grids, qmins, qmaxs, nbases, basis_func)
-    cart_coords_prod = tf.norm2cart_grid(q_prod[0:1, :], coords, masses, tmat) # for JIT compilation
+    q_prod = np.concatenate([np.zeros((ngrid_prod, 6)), q_prod], axis=1)
+    cart_coords_prod = tf.norm2cart_grid(q_prod[0:2, :], coords, masses, tmat) # for JIT compilation
     cart_coords_prod = tf.norm2cart_grid(q_prod, coords, masses, tmat)
     v_prod = pot.ammpot4_cart(cart_coords_prod)
 
@@ -174,7 +175,7 @@ if __name__ == "__main__":
     qmins = np.array([-80, -40, -40, -30, -20, -20])
     qmaxs = np.array([80, 40, 40, 20, 20, 20])
     ngrids = np.array([51, 51, 51, 51, 51, 51])
-    nbases = np.array([31, 25, 25, 25, 21, 21])
+    nbases = np.array([21, 15, 15, 15, 11, 11])
     variable_modes = np.array([0, 1, 2, 3, 4, 5])
 
     ngrid_prod = np.prod(ngrids)
