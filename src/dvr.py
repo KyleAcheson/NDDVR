@@ -19,28 +19,32 @@ class Calculator:
     def algorithm(self, algorithm):
         self._algorithm = algorithm
 
-    def solve_1d(self, x, v, mass, neig, hbar=1):
-        ngrid = len(x)
-        V = np.zeros((ngrid, ngrid))
-        for i in range(ngrid):
+    def solve_1d(self, x, v, mass, neig, nbasis=None, hbar=1):
+        if not nbasis:
+            nbasis = len(x)
+
+        V = np.zeros((nbasis, nbasis))
+        for i in range(nbasis):
             V[i, i] = v[i]
 
-        T = self.algorithm(x, mass, hbar)
+        T = self.algorithm(x, mass, nbasis, hbar)
 
         H = T + V
         energies, wfs = spyl.eigh(H, driver='evr', subset_by_index=[0, neig-1])
 
         return energies, wfs
     
-    def solve_nd(self, grids, masses, v, neig, hbar=1, ndim=2):
+    def solve_nd(self, grids, masses, v, neig, nbases=None, hbar=1, ndim=2):
         
         if len(grids) != ndim:
             raise TypeError('grids must be a list of arrays with length ndim')
         if len(masses) != ndim:
             raise TypeError('masses must be a list of real numbers with length ndim')
 
-        grid_sizes = [len(grid) for grid in grids]
-        total_size = np.prod(grid_sizes)
+        if not all(nbases):  # if nbases not provided - assumed to be number of points along each axis
+            nbases = [len(grid) for grid in grids]
+
+        total_size = np.prod(nbases)
         
         if len(v.shape) > 1:
             v = v.flatten()
@@ -49,34 +53,31 @@ class Calculator:
             raise TypeError('v must be a 1d array, its length must be the product of all grid sizes')
 
         if self.use_operators:
-            energies, wfs = self._solve_nd_operator(grids, masses, v, neig, hbar, ndim)
+            energies, wfs = self._solve_nd_operator(grids, nbases, masses, v, neig, hbar, ndim)
         else:
-            energies, wfs = self._solve_nd_full(grids, masses, v, neig, hbar, ndim)
+            energies, wfs = self._solve_nd_full(grids, nbases, masses, v, neig, hbar, ndim)
 
         return energies, wfs
 
 
     #@profile
-    def _solve_nd_operator(self, grids, masses, v, neig, hbar=1, ndim=2):
-        
-        grid_sizes = np.array([len(grid) for grid in grids])
+    def _solve_nd_operator(self, grids, nbases, masses, v, neig, hbar=1, ndim=2):
         
         kinetic_1d_mats = []
         for i in range(ndim):
-            kinetic_1d_mats.append(self.algorithm(grids[i], masses[i]))
+            kinetic_1d_mats.append(self.algorithm(grids[i], masses[i], nbases[i]))
             
-        H = op.Hamiltonian(v, kinetic_1d_mats, grid_sizes)
+        H = op.Hamiltonian(v, kinetic_1d_mats, nbases)
         energies, wfs = sparse.linalg.eigsh(H, k=neig, which='SA')
         return energies, wfs
 
 
     #@profile
-    def _solve_nd_full(self, grids, masses, v, neig, hbar=1, ndim=2):
+    def _solve_nd_full(self, grids, nbases, masses, v, neig, hbar=1, ndim=2):
 
-        grid_sizes = [len(grid) for grid in grids]
-        total_size = np.prod(grid_sizes)
+        total_size = np.prod(nbases)
         
-        H = self.kinetic_matrix_nd(grids, masses, grid_sizes, dim=ndim)
+        H = self.kinetic_matrix_nd(grids, masses, nbases, dim=ndim)
         
         diag_inds = np.diag_indices(int(total_size))
         H[diag_inds] += v
@@ -85,18 +86,18 @@ class Calculator:
         return energies, wfs
 
     #@profile
-    def kinetic_matrix_nd(self, grids, masses, sizes, dim):
+    def kinetic_matrix_nd(self, grids, masses, nbases, dim):
 
         if dim < 2:
             raise ValueError
 
-        total_size = np.prod(sizes)
+        total_size = np.prod(nbases)
         result_matrix = sparse.coo_matrix((total_size, total_size), dtype=np.float32)
         result_matrix = result_matrix.tocsr()
 
         for i in range(dim):
-            matricies = [sparse.identity(sizes[d], dtype=np.float32).tocsr() for d in range(dim)]
-            matricies[i] = self.algorithm(grids[i], masses[i])
+            matricies = [sparse.identity(nbases[d], dtype=np.float32).tocsr() for d in range(dim)]
+            matricies[i] = self.algorithm(grids[i], masses[i], nbases[i])
             result = sparse.kron(matricies[0], matricies[1])
             for j in range(2, dim):
                 result = sparse.kron(result, matricies[j])
