@@ -3,7 +3,7 @@ from typing import Callable
 import numpy as np
 from scipy.stats import qmc
 import numpy.typing as npt
-from exact_solvers import basis_funcs
+from fast_dvr.exact_solvers import HEG_procedure
 
 def generate_grid(transformation_matrix, qmins, qmaxs, mode_indicies, ngrids, grid_type='product', **kwargs):
     """
@@ -99,7 +99,7 @@ def get_quadrature_points(grids: list[npt.NDArray], x_mins: npt.NDArray, x_maxs:
     ndims = len(grids)
     quad_grids = []
     for d in range(ndims):
-        quad_points = HEG_procedure(grids[d], x_mins[d], x_maxs[d], nbases[d], basis_func)
+        quad_points, _ = HEG_procedure(grids[d], x_mins[d], x_maxs[d], nbases[d], basis_func)
         quad_grids.append(quad_points)
     if ndims == 1:
         return quad_points
@@ -109,49 +109,12 @@ def get_quadrature_points(grids: list[npt.NDArray], x_mins: npt.NDArray, x_maxs:
         return quad_points
 
 
-def HEG_procedure(grid: npt.NDArray, x_min: float, x_max: float, nbasis: int, basis_func: tuple[str, Callable]):
 
-    """
-    Diagonalises the matrix of the 1D position operator evaluated in the basis of basis functions
-    defined by `basis_func.get('basis_name')`. If `basis_name == 'sine'`, one diagonalises a function
-    of the position operator, specifically $f(x) = \cos(\frac{\pi (x - x_0)}{L})$.
-    The resulting quadrature points for the given dimension are returned as a 1D array.
-
-    :param grid:
-    :param x_min:
-    :param x_max:
-    :param nbasis:
-    :param basis_func:
-    :return:
-    """
-
-    ngrid = len(grid)
-    dx = grid[1] - grid[0]
-    L = x_max - x_min
-
-    func_type, func = basis_func # get callable for constructing basis functions
-    basis = func(grid, nbasis, ngrid)
-    basis = basis.T
-
-    if func_type == 'sine':  # in sine-DVR one diagonalises this function of the position operator
-        x_op = np.cos(np.pi * (grid - x_min) / L)
-    else:
-        x_op = grid
-
-    Xmat = basis.T @ (x_op.reshape(-1, 1) * basis) * dx  # evaluate position operator matrix in the basis
-    eigvals, tmat = np.linalg.eigh(Xmat)
-
-    if func_type == 'sine':  # we have diagonalised a function of position, therefore have to invert it
-        quad_points = x_min + (L / np.pi) * np.arccos(eigvals)
-    else:
-        quad_points = eigvals  # otherwise quadrature points are just the eigenvalues
-
-    return quad_points
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import potentials as potf
-    from exact_solvers import get_pib_basis
+    from fast_dvr.exact_solvers import get_pib_basis, basis_funcs
 
     ngrid = 41
     x = np.linspace(-5, 5, ngrid)
