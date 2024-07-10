@@ -3,7 +3,10 @@ import numpy as np
 import scipy.linalg as spyl
 from scipy import sparse
 import fast_dvr.operators as op
+import warnings
 
+class ArpackArnoldiIter(UserWarning):
+    pass
 
 class Calculator:
 
@@ -62,13 +65,21 @@ class Calculator:
 
     #@profile
     def _solve_nd_operator(self, grids, nbases, masses, v, neig, hbar=1, ndim=2):
-        
+
         kinetic_1d_mats = []
         for i in range(ndim):
             kinetic_1d_mats.append(self.algorithm(grids[i], masses[i], nbases[i]))
-            
+
+        total_size = np.prod(nbases)
         H = op.Hamiltonian(v, kinetic_1d_mats, nbases)
-        energies, wfs = sparse.linalg.eigsh(H, k=neig, which='SA')
+
+        max_iter = np.iinfo(np.int32)
+        niter = total_size * 10
+        if niter > max_iter:
+            niter = max_iter
+            warnings.warn("Default maximum number of Arnoldi iterations (n*10 > int32 limit) - maxiter set to int32 limit.", ArpackArnoldiIter)
+
+        energies, wfs = sparse.linalg.eigsh(H, k=neig, which='SA', maxiter=niter)
         return energies, wfs
 
 
@@ -81,8 +92,14 @@ class Calculator:
         
         diag_inds = np.diag_indices(int(total_size))
         H[diag_inds] += v
-        
-        energies, wfs = sparse.linalg.eigsh(H, k=neig, which='SA')
+
+        max_iter = np.iinfo(np.int32)
+        niter = total_size * 10
+        if niter > max_iter:
+            niter = max_iter
+            warnings.warn("Default maximum number of Arnoldi iterations (n*10 > int32 limit) - maxiter set to int32 limit.", ArpackArnoldiIter)
+
+        energies, wfs = sparse.linalg.eigsh(H, k=neig, which='SA', maxiter=niter)
         return energies, wfs
 
     #@profile
