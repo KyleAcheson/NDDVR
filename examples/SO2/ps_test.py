@@ -84,8 +84,8 @@ def run_full_dvr(wdir, v, qmins, qmaxs, ngrids, nbases, neig, solver_name, use_o
 if __name__ == "__main__":
 
 
-    pot_dir = f'/home/kyle/DVR_Applications/NH3/sine_dvr/whole_pot/'
-    out_dir = f'/home/kyle/DVR_Applications/NH3/sine_dvr/results/'
+    pot_dir = f'/storage/chem/msszxt/Orca_Calculations/SO2/whole_pot'
+    out_dir = f'/storage/chem/msszxt/DVR_Runs/SO2'
 
     solver_name = 'cm_dvr'
     use_ops = True
@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     eq_coords *= (1 / BOHR)
     ngrid_prod = np.prod(nbases)
-    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/exact_potential.txt')
+    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/energies_raw.txt')
 
     if do_gpr:
         v = fit_gpr(v, q_mins, q_maxs, nbases, nbases_pred, length_scale=length_scale, length_scale_bounds=length_scale_bounds)
