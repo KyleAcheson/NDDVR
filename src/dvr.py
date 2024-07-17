@@ -44,7 +44,9 @@ class Calculator:
         if len(masses) != ndim:
             raise TypeError('masses must be a list of real numbers with length ndim')
 
-        if not all(nbases):  # if nbases not provided - assumed to be number of points along each axis
+        if type(nbases) == np.ndarray:  # if nbases not provided - assumed to be number of points along each axis
+            pass
+        else:
             nbases = [len(grid) for grid in grids]
 
         total_size = np.prod(nbases)
