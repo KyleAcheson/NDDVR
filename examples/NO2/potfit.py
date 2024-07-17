@@ -159,8 +159,8 @@ if __name__ == "__main__":
     variable_modes = np.array([0, 1, 2])
     #ngrids = np.array([41, 31, 31])
     ngrids = np.array([21, 21, 21])
-    q_mins = np.array([-70, -45, -30])
-    q_maxs = np.array([70, 35, 30])
+    q_mins = np.array([-70, -45, -35])
+    q_maxs = np.array([70, 35, 35])
 
     natoms = 3
     labels = ['N', 'O', 'O']
