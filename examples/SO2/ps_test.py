@@ -42,7 +42,7 @@ def fit_gpr(v, qmins, qmaxs, ngrids_train, ngrids_interp, **kwargs):
     ndof = len(qmins)
     q_train = grids.direct_product_grid(qmins, qmaxs, ngrids_train, ndof=ndof)
     q_pred = grids.direct_product_grid(qmins, qmaxs, ngrids_interp, ndof=ndof)
-    kernel = RBF(length_scale=kwargs['length_scale'], length_scale_bounds=(2.0, 45.0))
+    kernel = RBF(length_scale=kwargs['length_scale'], length_scale_bounds=kwargs['length_scale_bounds'])
     v_pred, v_std, gp = pot.fit_potential(q_train, q_pred, v, ndof, kernel)
     print(f'opt. length scale: {gp.kernel_.length_scale}')
     print(f'max std. dev.: {np.max(v_std)}')
@@ -84,8 +84,8 @@ def run_full_dvr(wdir, v, qmins, qmaxs, ngrids, nbases, neig, solver_name, use_o
 if __name__ == "__main__":
 
 
-    pot_dir = f'/storage/chem/msszxt/Orca_Calculations/SO2/whole_pot'
-    out_dir = f'/storage/chem/msszxt/DVR_Runs/SO2'
+    pot_dir = f'/home/kyle/DVR_Applications/SO2/ND_dvr'
+    out_dir = f'/home/kyle/DVR_Applications/SO2/ND_dvr/results/gpr'
 
     solver_name = 'cm_dvr'
     use_ops = True
@@ -94,12 +94,13 @@ if __name__ == "__main__":
     neig = 9
     ngrids = np.array([41, 31, 31])
     nbases = np.array([41, 31, 31])
-    nbases_pred = np.array([81, 61, 61])
+    nbases_pred = np.array([51, 31, 31])
     q_mins = np.array([-80, -50, -40])
     q_maxs = np.array([80, 40, 40])
 
-    length_scale = 15
-    length_scale_bounds = (2.0, 45.0)
+    length_scale = 1
+    #length_scale_bounds = (2.0, 25.0)
+    length_scale_bounds = "fixed"
 
     natoms = 3
     variable_modes = np.array([0, 1, 2])
