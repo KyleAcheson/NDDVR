@@ -95,7 +95,7 @@ class Calculator:
         diag_inds = np.diag_indices(int(total_size))
         H[diag_inds] += v
 
-        max_iter = np.iinfo(np.int32)
+        max_iter = np.iinfo(np.int32).max
         niter = total_size * 10
         if niter > max_iter:
             niter = max_iter
