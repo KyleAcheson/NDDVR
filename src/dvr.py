@@ -75,7 +75,7 @@ class Calculator:
         total_size = np.prod(nbases)
         H = op.Hamiltonian(v, kinetic_1d_mats, nbases)
 
-        max_iter = np.iinfo(np.int32)
+        max_iter = np.iinfo(np.int32).max
         niter = total_size * 10
         if niter > max_iter:
             niter = max_iter
