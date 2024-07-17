@@ -10,10 +10,7 @@ from fast_dvr.exact_solvers import *
 import fast_dvr.wf_utils as wfu
 import fast_dvr.transforms as tf
 import fast_dvr.grids as grids
-import matplotlib.pyplot as plt
 from sklearn.gaussian_process.kernels import RBF
-from pyscf import gto, hessian, dft
-from pyscf.hessian.thermo import harmonic_analysis
 
 ELEC_MASS = 9.1093837E-31
 AU2EV = 27.2114
@@ -40,8 +37,19 @@ def write_to_xyz(coords, atom_labels, fname):
                 [f'{atom_labels[ind]}\t' + '\t'.join(map(str, row)) for ind, row in enumerate(coord)]) + '\n'
             f.write(array_string)
 
+def fit_gpr(v, qmins, qmaxs, ngrids_train, ngrids_interp, **kwargs):
 
-def run_full_dvr(pot_dir, wdir, qmins, qmaxs, ngrids, nbases, neig, solver_name, use_ops=True):
+    ndof = len(qmins)
+    q_train = grids.direct_product_grid(qmins, qmaxs, ngrids_train, ndof=ndof)
+    q_pred = grids.direct_product_grid(qmins, qmaxs, ngrids_interp, ndof=ndof)
+    kernel = RBF(length_scale=kwargs['length_scale'], length_scale_bounds=(2.0, 45.0))
+    v_pred, v_std, gp = pot.fit_potential(q_train, q_pred, v, ndof, kernel)
+    print(f'opt. length scale: {gp.kernel_.length_scale}')
+    print(f'max std. dev.: {np.max(v_std)}')
+    return v_pred
+
+
+def run_full_dvr(wdir, v, qmins, qmaxs, ngrids, nbases, neig, solver_name, use_ops=True):
     solvers = {'cm_dvr': colbert_miller, 'sine_dvr': sine_dvr, 'A116': algorithm_116}
     solver = solvers.get(solver_name)
     if solver_name == 'sine_dvr':
@@ -54,7 +62,6 @@ def run_full_dvr(pot_dir, wdir, qmins, qmaxs, ngrids, nbases, neig, solver_name,
 
     masses = np.array([1, 1, 1])
     ndims = 3
-    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/exact_potential.txt')
     if not os.path.exists(wdir):
         os.makedirs(wdir)
 
@@ -80,16 +87,22 @@ if __name__ == "__main__":
     pot_dir = f'/home/kyle/DVR_Applications/NH3/sine_dvr/whole_pot/'
     out_dir = f'/home/kyle/DVR_Applications/NH3/sine_dvr/results/'
 
-    neig = 9
     solver_name = 'cm_dvr'
     use_ops = True
-    variable_modes = np.array([0, 1, 2])
+    do_gpr = True
+
+    neig = 9
     ngrids = np.array([41, 31, 31])
     nbases = np.array([41, 31, 31])
+    nbases_pred = np.array([81, 61, 61])
     q_mins = np.array([-80, -50, -40])
     q_maxs = np.array([80, 40, 40])
-    
+
+    length_scale = 15
+    length_scale_bounds = (2.0, 45.0)
+
     natoms = 3
+    variable_modes = np.array([0, 1, 2])
     labels = ['S', 'O', 'O']
     masses = np.array([32.065, 15.999, 15.999])
 
@@ -98,6 +111,12 @@ if __name__ == "__main__":
                           [-0.719129, 1.264878, 0.00]])
 
     eq_coords *= (1 / BOHR)
-    ngrid_prod = np.prod(ngrids)
+    ngrid_prod = np.prod(nbases)
+    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/exact_potential.txt')
 
-    run_full_dvr(pot_dir, out_dir, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
+    if do_gpr:
+        v = fit_gpr(v, q_mins, q_maxs, nbases, nbases_pred, length_scale=length_scale, length_scale_bounds=length_scale_bounds)
+        nbases = nbases_pred
+        ngrids = nbases_pred
+
+    run_full_dvr(out_dir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
