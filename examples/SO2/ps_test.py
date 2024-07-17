@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     solver_name = 'cm_dvr'
     use_ops = True
-    do_gpr = True
+    do_gpr = False
 
     neig = 9
     ngrids = np.array([41, 31, 31])
@@ -107,9 +107,15 @@ if __name__ == "__main__":
     labels = ['S', 'O', 'O']
     masses = np.array([32.065, 15.999, 15.999])
 
-    eq_coords = np.array([[-0.009001, -0.015486, 0.00],
-                          [1.454979, -0.003042, 0.00],
-                          [-0.719129, 1.264878, 0.00]])
+    # def2-svp
+    #eq_coords = np.array([[-0.009001, -0.015486, 0.00],
+    #                      [1.454979, -0.003042, 0.00],
+    #                      [-0.719129, 1.264878, 0.00]])
+
+    # def2-tzvp
+    eq_coords = np.array([[-0.003392, -0.005887, 0.00],
+                          [1.435506, 0.001876, 0.00],
+                          [-0.705264, 1.250360, 0.00]])
 
     eq_coords *= (1 / BOHR)
     ngrid_prod = np.prod(nbases)
