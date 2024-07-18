@@ -1,4 +1,4 @@
-      SUBROUTINE H2OPOT(R, NP)
+      SUBROUTINE H2OPOT(R, V, NP)
       IMPLICIT NONE
       INTEGER, PARAMETER :: NDIM=3
       INTEGER, intent(in) :: NP
