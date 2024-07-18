@@ -1,3 +1,15 @@
+      SUBROUTINE H2OPOT(R, NP)
+      IMPLICIT NONE
+      INTEGER, PARAMETER :: NDIM=3
+      INTEGER, intent(in) :: NP
+      REAL(8), intent(in) :: R(NP, NDIM)
+      REAL(8), intent(out) :: V(NP)
+
+      call vibpot(R, V, NP)
+
+      END
+
+
       subroutine vibpot(rij,v,n)
       implicit real*8 (a-h,o-z)
 c
@@ -9,8 +21,8 @@ c     rij(i,3) is hoh angle in rad
 c     v(i) is pes in au
 c     n is number of geometries
 c
-      dimension rij(n,3),v(n),c5z(245),cbasis(245),ccore(245),
-     $          crest(245),idx(245,3),fmat(15,3)
+      dimension rij(n,3), v(n), c5z(245), cbasis(245), ccore(245),
+     $          crest(245), idx(245,3), fmat(15,3)
        data (idx(i,1),i=1,245)/
      $ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2,
      $ 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,

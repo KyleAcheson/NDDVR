@@ -64,7 +64,8 @@ def partridge_schwenke_potential(rij):
         number of points and each column an internal coordinate.
         NOTE: rij[:, 0:2] = O-H distances in a.u.,
               rij[:, -1] = HOH angle in radians. """
-    v = h2opes.vibpot(n=rij.shape[0], rij=rij)
+    #v = h2opes.vibpot(n=rij.shape[0], rij=rij)
+    v = h2opes.h2opot(r=rij, np=rij.shape[0])
     return v
 
 
