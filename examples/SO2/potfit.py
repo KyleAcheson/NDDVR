@@ -102,9 +102,13 @@ def potential_calcultor_1d(labels, cart_coords, **kwargs):
     
     
 
-def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmins, qmaxs, ngrids):
+def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmins, qmaxs, ngrids, nbases, get_quad=False):
 
-    ngrid_prod = np.prod(ngrids)
+    if get_quad:
+        ngrid_prod = np.prod(nbases)
+    else:
+        ngrid_prod = np.prod(ngrids)
+
     outdir = f'{wdir}/ngrid_{ngrid_prod}'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
@@ -124,9 +128,15 @@ def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmin
     freqs_wavenums = freqs * AU2Hz / LIGHT_SPEED_SI * 1e-2
     print(freqs_wavenums[-3:])
 
-    q_prod = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrids, grid_type='product')
-    cart_coords_prod = tf.norm2cart_grid(q_prod[0:1, :], coords, masses, tmat) # for JIT compilation
-    cart_coords_prod = tf.norm2cart_grid(q_prod, coords, masses, tmat)
+    if get_quad:
+        q_prod = grids.get_quadrature_points(q_grids, qmins, qmaxs, nbases, ('sine', get_pib_basis))
+        q_prod = np.concatenate([np.zeros((ngrid_prod, 6)), q_prod], axis=1)
+        cart_coords_prod = tf.norm2cart_grid(q_prod[0:1, :], coords, masses, tmat)  # for JIT compilation
+        cart_coords_prod = tf.norm2cart_grid(q_prod, coords, masses, tmat)
+    else:
+        q_prod = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrids, grid_type='product')
+        cart_coords_prod = tf.norm2cart_grid(q_prod[0:1, :], coords, masses, tmat) # for JIT compilation
+        cart_coords_prod = tf.norm2cart_grid(q_prod, coords, masses, tmat)
 
     q_prod = q_prod[:, inds]
     np.savetxt(f'{outdir}/exact_grid.txt', q_prod)
@@ -156,8 +166,18 @@ def pyscf_freq(labels, masses, coords, **kwargs):
 if __name__ == "__main__":
 
     out_dir = '/home/kyle/DVR_Applications/SO2/1D_cuts/tzvp'
+    
+    # If get_quad == True - diagonalises the position operator defined on
+    # a direct product grid according to ngrids. This yields a sine DVR
+    # basis defined by nbases, in which the potential is evaluated.
+    # Otherwise, the potential is evaluated directly on the direct product
+    # grid defined by the product of ngrids points.
+
+    get_quad = True
+    
     variable_modes = np.array([0, 1, 2])
-    ngrids = np.array([41, 31, 31])
+    ngrids = np.array([81, 61, 61])
+    nbases = np.array([41, 31, 31])
     q_mins = np.array([-80, -50, -40])
     q_maxs = np.array([80, 40, 40])
 
@@ -165,17 +185,11 @@ if __name__ == "__main__":
     labels = ['S', 'O', 'O']
     masses = np.array([32.065, 15.999, 15.999])
 
-    # def2-svp
-    #eq_coords = np.array([[-0.009001, -0.015486, 0.00],
-    #                      [1.454979, -0.003042, 0.00],
-    #                      [-0.719129, 1.264878, 0.00]])
-
     # def2-tzvp
     eq_coords = np.array([[-0.003392, -0.005887, 0.00],
                           [1.435506, 0.001876, 0.00],
                           [-0.705264, 1.250360, 0.00]])
 
     hessian = pyscf_freq(labels, masses, eq_coords, xc='B3LYP', basis='def2-tzvp', units='Angstrom')
-    generate_ncoords(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, xc='B3LYP', basis='def2-tzvp')
-    #generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids)
-    breakpoint()
+    #generate_ncoords(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, xc='B3LYP', basis='def2-tzvp')
+    generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases, get_quad=get_quad)

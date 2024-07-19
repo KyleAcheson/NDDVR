@@ -85,32 +85,21 @@ if __name__ == "__main__":
 
 
     pot_dir = f'/home/kyle/DVR_Applications/SO2/ND_dvr'
-    out_dir = f'/home/kyle/DVR_Applications/SO2/ND_dvr/results/gpr'
+    out_dir = f'/home/kyle/DVR_Applications/SO2/ND_dvr/results/sine'
 
-    solver_name = 'cm_dvr'
+    solver_name = 'sine_dvr'
     use_ops = True
-    do_gpr = False
 
-    neig = 9
-    ngrids = np.array([41, 31, 31])
+    neig = 20
+    ngrids = np.array([81, 61, 61])
     nbases = np.array([41, 31, 31])
-    nbases_pred = np.array([51, 31, 31])
     q_mins = np.array([-80, -50, -40])
     q_maxs = np.array([80, 40, 40])
-
-    length_scale = 1
-    #length_scale_bounds = (2.0, 25.0)
-    length_scale_bounds = "fixed"
 
     natoms = 3
     variable_modes = np.array([0, 1, 2])
     labels = ['S', 'O', 'O']
     masses = np.array([32.065, 15.999, 15.999])
-
-    # def2-svp
-    #eq_coords = np.array([[-0.009001, -0.015486, 0.00],
-    #                      [1.454979, -0.003042, 0.00],
-    #                      [-0.719129, 1.264878, 0.00]])
 
     # def2-tzvp
     eq_coords = np.array([[-0.003392, -0.005887, 0.00],
@@ -119,11 +108,13 @@ if __name__ == "__main__":
 
     eq_coords *= (1 / BOHR)
     ngrid_prod = np.prod(nbases)
-    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/energies_raw.txt')
 
-    if do_gpr:
-        v = fit_gpr(v, q_mins, q_maxs, nbases, nbases_pred, length_scale=length_scale, length_scale_bounds=length_scale_bounds)
-        nbases = nbases_pred
-        ngrids = nbases_pred
+    if solver_name == 'sine_dvr':
+        ngrid_prod = np.prod(nbases)
+
+    else:
+        ngrid_prod = np.prod(ngrids)
+
+    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/energies_raw.txt')
 
     run_full_dvr(out_dir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
