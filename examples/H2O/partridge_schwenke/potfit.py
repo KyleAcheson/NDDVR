@@ -1,11 +1,7 @@
 import os
 import sys
-
 import matplotlib.pyplot as plt
 import numpy as np
-sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../../fast_dvr'),
-                 os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
-
 import fast_dvr.dvr as dvr
 import fast_dvr.potentials as pot
 from fast_dvr.synthesised_solvers import *
@@ -14,177 +10,139 @@ import fast_dvr.wf_utils as wfu
 import fast_dvr.transforms as tf
 import fast_dvr.grids as grids
 import matplotlib.pyplot as plt
-from scipy.spatial import distance_matrix
-from sklearn.gaussian_process.kernels import RBF
+from pyscf import gto, hessian, dft
+from pyscf.hessian.thermo import harmonic_analysis
 
-BOHR = 0.52917741092  # Angstroms
+ELEC_MASS = 9.10938356E-31
 AU2EV = 27.2114
 AU2WAVNUM = 219474.63
+AVOGADRO = 6.022140857E23
+BOHR = 0.52917721092  # Angstroms
+BOHR_SI = BOHR * 1e-10
+ATOMIC_MASS = 9.109E-31
+HARTREE2J = 4.359744650e-18
+HARTREE2EV = 27.21138602
+LIGHT_SPEED_SI = 299792458
+AMU2AU = (1E-3 / AVOGADRO) / ELEC_MASS
 
-def distance_hist(x_data, nbins, skip=1):
-    dists = distance_matrix(x_data[::skip, :], x_data[::skip, :], p=2)
-    plt.figure()
-    plt.hist(dists.flatten(), bins=nbins)
-    #plt.bar(bins, counts)
-    plt.show()
-    
+AU2Hz = ((HARTREE2J / (ATOMIC_MASS * BOHR_SI ** 2)) ** 0.5 / (2 * np.pi))
 
-def slice_1d(variable_modes, qmins, qmaxs, ngrid_prod):
 
-    masses = np.array([29157.9765, 1833.3516, 1833.3516])
-    eq_coords = np.array([[0, 0, 0], [0.95865, 0, 0], [-0.237556, 0.928750, 0]]) * (1 / BOHR)
+def write_to_xyz(coords, atom_labels, fname):
+    natoms, _, npoints = coords.shape
+    with open(fname, 'a+') as f:
+        for i in range(npoints):
+            coord = coords[:, :, i] * BOHR
+            f.write(f'{natoms}\n')
+            f.write(f'grid point {i + 1}\n')
+            array_string = '\n'.join(
+                [f'{atom_labels[ind]}\t' + '\t'.join(map(str, row)) for ind, row in enumerate(coord)]) + '\n'
+            f.write(array_string)
+
+
+def generate_ncoords(outdir, coords, masses, hessian, variable_modes, qmins, qmaxs, ngrids):
+    ngrid_prod = np.prod(ngrids)
     ndof = len(variable_modes)
     variable_modes = np.array(variable_modes)
     inds = variable_modes + 6
 
-    hessian = pot.partridge_schwenke_hessian()
-    freqs, norm_modes, tmat = tf.get_normal_modes(hessian, masses, 3)
+    fconsts, tmat = tf._diag_hessian(hessian, masses)
+    freqs = np.lib.scimath.sqrt(fconsts)  # in a.u.
+    freqs_wavenums = freqs * AU2Hz / LIGHT_SPEED_SI * 1e-2
+    print(freqs_wavenums[-3:])
 
-    q_prod = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrid_prod, grid_type='product')
-    cart_coords_prod = tf.norm2cart_grid(q_prod, eq_coords, masses, tmat)
-    v_prod = pot.partridge_schwenke_cart(cart_coords_prod)
-    q_prod = q_prod[:, inds]
-    return q_prod, v_prod
-
-
-def water_gpr(tmat, qmins, qmaxs, ngrid, ngrid_prod):
-    masses = np.array([29157.9765, 1833.3516, 1833.3516])
-    eq_coords = np.array([[0, 0, 0], [0.95865, 0, 0], [-0.237556, 0.928750, 0]]) * (1 / BOHR)
-    variable_modes = [0, 1, 2]
-    ndof = len(variable_modes)
-    variable_modes = np.array(variable_modes)
-
-    thresh = 0.005 # .5% error in gpr fit
-    qcoords = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrid, grid_type='sobol', scramble=True, seed=42)
-    cart_coords = tf.norm2cart_grid(qcoords, eq_coords, masses, tmat)
-    v = pot.partridge_schwenke_cart(cart_coords)
-
-    inds = variable_modes + 6
-
-    q_prod = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrid_prod, grid_type='product')
-    cart_coords_prod = tf.norm2cart_grid(q_prod, eq_coords, masses, tmat)
-    v_prod = pot.partridge_schwenke_cart(cart_coords_prod)
-
-    q_train = qcoords[:, inds]
-    q_pred = q_prod[:, inds]
-    kernel = RBF(length_scale=15, length_scale_bounds=(2.0, 45.0))
-    v_pred, v_std, gp = pot.fit_potential(q_train, q_pred, v, ndof, kernel)
-
-    frac_error = np.abs(v_pred - v_prod) / v_prod
-    error_inds = np.argwhere(np.abs(frac_error) > thresh)
-    nabove_thresh = len(error_inds)
-    total_numel = q_pred.shape[0]
-
-    print('GPR FIT:\n')
-    print(f'opt. length scale: {gp.kernel_.length_scale}')
-    print(f'max std. dev.: {np.max(v_std)}')
-    print(f'max fractional error: {np.max(frac_error)}')
-    print(f'{nabove_thresh} points of {total_numel} above error thresh of {thresh}.')
-
-    return v_pred, v_prod
-
-def generate_exact_potential(wdir, ngrid_prod):
-    #qmins = [-60, -45, -25]
-    #qmaxs = [60, 30, 25]
-    qmins = [-80, -50, -30]
-    qmaxs = [70, 25, 30]
-
-    outdir = f'{wdir}/inputs/range2/ngrid_{ngrid_prod}'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    masses = np.array([29157.9765, 1833.3516, 1833.3516])
-    eq_coords = np.array([[0, 0, 0], [0.95865, 0, 0], [-0.237556, 0.928750, 0]]) * (1 / BOHR)
-    variable_modes = [0, 1, 2]
-    ndof = len(variable_modes)
-    variable_modes = np.array(variable_modes)
-    inds = variable_modes + 6
-
-    q0 = np.linspace(qmins[0], qmaxs[0], ngrid_prod)
-    q1 = np.linspace(qmins[1], qmaxs[1], ngrid_prod)
-    q2 = np.linspace(qmins[2], qmaxs[2], ngrid_prod)
-    q_grids = [q0, q1, q2]
-
-    hessian = pot.partridge_schwenke_hessian()
-    freqs, norm_modes, tmat = tf.get_normal_modes(hessian, masses, ndof)
-
-    q_prod = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrid_prod, grid_type='product')
-    cart_coords_prod = tf.norm2cart_grid(q_prod, eq_coords, masses, tmat)
-    v_prod = pot.partridge_schwenke_cart(cart_coords_prod)
-    q_prod = q_prod[:, inds]
-    np.savetxt(f'{outdir}/exact_potential.txt', v_prod)
-    np.savetxt(f'{outdir}/exact_grid.txt', q_prod)
-
-
-def generate_gpr_potential(wdir, exponent, ngrid_prod):
-    #qmins = [-50, -30, -25]
-    #qmaxs = [50, 20, 25]
-    qmins = [-80, -50, -30]
-    qmaxs = [70, 25, 30]
-    ngrid = 2**exponent
-
-    outdir = f'{wdir}/inputs/range2/gpr/exact_ngrid_{ngrid_prod}/2pow{exponent}'
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-
-    masses = np.array([29157.9765, 1833.3516, 1833.3516])
-    eq_coords = np.array([[0, 0, 0], [0.95865, 0, 0], [-0.237556, 0.928750, 0]]) * (1 / BOHR)
-    variable_modes = [0, 1, 2]
-    ndof = len(variable_modes)
-    variable_modes = np.array(variable_modes)
-    inds = variable_modes + 6
-
-    q0 = np.linspace(qmins[0], qmaxs[0], ngrid_prod)
-    q1 = np.linspace(qmins[1], qmaxs[1], ngrid_prod)
-    q2 = np.linspace(qmins[2], qmaxs[2], ngrid_prod)
-    q_grids = [q0, q1, q2]
-
-    hessian = pot.partridge_schwenke_hessian()
-    freqs, norm_modes, tmat = tf.get_normal_modes(hessian, masses, ndof)
-
-    v_pred, v_exact = water_gpr(tmat, qmins, qmaxs, ngrid, ngrid_prod)
-    np.savetxt(f'{outdir}/predicted_potential.txt', v_pred)
-
-
-def run_exact_pot():
-    wdir = '.'
-    ngrids = [21, 31, 41, 51, 61, 71, 81]
-    for ngrid in ngrids:
-        generate_exact_potential(wdir, ngrid)
-
-
-def run_gpr_pot():
-    wdir = '.'
-    ngrid_exact = 41
-    exponents = [8, 9, 10, 11, 12]
-    exponents = [12]
-    for exponent in exponents:
-        generate_gpr_potential(wdir, exponent, ngrid_exact)
-
-
-def run_1d_test():
-    ngrid = 61
-    qmins = [-80, -50, -30]
-    qmaxs = [70, 25, 30]
-    variable_modes = [0, 1, 2]
-    mode_labels = ['bend', 'sym', 'asym']
-    n = len(variable_modes)
     fig = plt.subplots()
-    for i in range(n):
+    for i in range(ndof):
         qmin = [qmins[i]]
         qmax = [qmaxs[i]]
         variable_mode = [variable_modes[i]]
-        q, v = slice_1d(variable_mode, qmin, qmax, ngrid)
-        ind = np.argwhere(q == 0)
-        print(ind)
-        plt.plot(q, v, label=mode_labels[i])
+        grid = [ngrids[i]]
+        q_prod = grids.generate_grid(tmat, qmin, qmax, variable_mode, grid, grid_type='product')
+        cart = tf.norm2cart_grid(q_prod, coords, masses, tmat)
+        v = pot.partridge_schwenke_cart(cart)
+        q_prod = q_prod[:, inds[i]]
+        write_to_xyz(cart, ['0', 'H', 'H'], fname=f'{outdir}/nmode{variable_modes[i]}.xyz')
+        np.savetxt(f'{outdir}/nm{i}_grid.txt', q_prod)
+        plt.plot(q_prod, v * AU2WAVNUM, label=i)
+        print(np.min(v * AU2WAVNUM))
     plt.xlabel('$q$')
-    plt.ylabel('$v$ (a.u.)')
+    plt.ylabel('$v$ (cm^-1)')
     plt.legend()
+    plt.savefig(f'{outdir}/pot_1d_cuts.png')
     plt.show()
-    breakpoint()
+
+def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmins, qmaxs, ngrids, nbases, get_quad=False):
+    if get_quad:
+        ngrid_prod = np.prod(nbases)
+    else:
+        ngrid_prod = np.prod(ngrids)
+    outdir = f'{wdir}/ngrid_{ngrid_prod}'
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    ndof = len(variable_modes)
+    variable_modes = np.array(variable_modes)
+    inds = variable_modes + 6
+
+    q_grids = []
+    for i in range(ndof):
+        q_grids.append(np.linspace(qmins[i], qmaxs[i], ngrids[i]))
+
+    fconsts, tmat = tf._diag_hessian(hessian, masses)
+    freqs = np.lib.scimath.sqrt(fconsts)  # in a.u.
+    freqs_wavenums = freqs * AU2Hz / LIGHT_SPEED_SI * 1e-2
+    print(freqs_wavenums[-3:])
+
+    if get_quad:
+        q_prod = grids.get_quadrature_points(q_grids, qmins, qmaxs, nbases, ('sine', get_pib_basis))
+        q_prod = np.concatenate([np.zeros((ngrid_prod, 6)), q_prod], axis=1)
+        cart_coords_prod = tf.norm2cart_grid(q_prod[0:1, :], coords, masses, tmat)  # for JIT compilation
+        cart_coords_prod = tf.norm2cart_grid(q_prod, coords, masses, tmat)
+    else:
+        q_prod = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrids, grid_type='product')
+        cart_coords_prod = tf.norm2cart_grid(q_prod[0:1, :], coords, masses, tmat)  # for JIT compilation
+        cart_coords_prod = tf.norm2cart_grid(q_prod, coords, masses, tmat)
+
+
+
+    v = pot.partridge_schwenke_cart(cart_coords_prod)
+    q_prod = q_prod[:, inds]
+    np.savetxt(f'{outdir}/exact_grid.txt', q_prod)
+    np.savetxt(f'{outdir}/exact_potential.txt', v)
+
+
 
 if __name__ == "__main__":
-    #run_1d_test()
-    run_exact_pot()
-    #run_gpr_pot()
+    out_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot/sine_dvr'
+
+    # If get_quad == True - diagonalises the position operator defined on
+    # a direct product grid according to ngrids. This yields a sine DVR
+    # basis defined by nbases, in which the potential is evaluated.
+    # Otherwise, the potential is evaluated directly on the direct product
+    # grid defined by the product of ngrids points.
+
+    get_quad = True
+    ngrids = np.array([81, 61, 61])
+    nbases = np.array([41, 31, 31])
+    q_mins = np.array([-65, -35, -25])
+    q_maxs = np.array([55, 20, 25])
+    variable_modes = np.array([0, 1, 2])
+
+    natoms = 3
+    labels = ['O', 'H', 'H']
+    masses = np.array([15.999, 1.008, 1.008])
+    masses *= AMU2AU
+
+    # Partridge-Schwenke minima in Ang
+    eq_coords = np.array([[0.00, 0.00, 0.00],
+                          [0.95865, 0.00, 0.00],
+                          [-0.237556, 0.928750, 0.00]])
+    eq_coords *= (1 / BOHR)
+
+    hessian = pot.partridge_schwenke_hessian()
+    #generate_ncoords(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids)
+    generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases, get_quad=get_quad)
+    breakpoint()

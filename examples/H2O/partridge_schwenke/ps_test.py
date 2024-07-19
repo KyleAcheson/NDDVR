@@ -3,139 +3,134 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-sys.path.extend([os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), '../../fast_dvr'),
-                 os.path.dirname(os.path.dirname(os.path.realpath(__file__)))])
 import fast_dvr.dvr as dvr
 import fast_dvr.potentials as pot
 from fast_dvr.synthesised_solvers import *
 from fast_dvr.exact_solvers import *
 import fast_dvr.wf_utils as wfu
+import fast_dvr.transforms as tf
+import fast_dvr.grids as grids
+from sklearn.gaussian_process.kernels import RBF
+from scipy.interpolate import RBFInterpolator
 
-BOHR = 0.529177
+ELEC_MASS = 9.1093837E-31
+AU2EV = 27.2114
 AU2WAVNUM = 219474.63
 
-algorithms = {'A116': algorithm_116}
+BOHR = 0.52917721092  # Angstroms
+BOHR_SI = BOHR * 1e-10
+ATOMIC_MASS = 9.109E-31
+HARTREE2J = 4.359744650e-18
+HARTREE2EV = 27.21138602
+LIGHT_SPEED_SI = 299792458
+
+AU2Hz = ((HARTREE2J / (ATOMIC_MASS * BOHR_SI ** 2)) ** 0.5 / (2 * np.pi))
 
 
-def plot_transition_convergence(wdir, solver_name, ngrids, ntransitions, exact=True):
-    tot_grids = len(ngrids)
-    exp_transitions = np.genfromtxt('./results/exp_transitions.txt')[:ntransitions]
-    all_errors = np.zeros((tot_grids, ntransitions))
-    for i, ngrid in enumerate(ngrids):
-        if exact:
-            out_dir = f'{wdir}/ngrid_{ngrid}'
-        else:
-            out_dir = f'{wdir}/2pow{ngrid}'
-        transitions = np.genfromtxt(f'{out_dir}/{solver_name}_transitions.txt')
-        frac_error = np.abs(transitions - exp_transitions)
-        all_errors[i, :] = frac_error
-    fig = plt.figure()
-    plt.plot(ngrids, all_errors)
-    plt.xlim([ngrids[0], ngrids[-1]])
-    if exact:
-        plt.xlabel('$N_{\mathrm{grid}}$')
+def write_to_xyz(coords, atom_labels, fname):
+    natoms, _, npoints = coords.shape
+    with open(fname, 'a+') as f:
+        for i in range(npoints):
+            coord = coords[:, :, i] * BOHR
+            f.write(f'{natoms}\n')
+            f.write(f'grid point {i + 1}\n')
+            array_string = '\n'.join(
+                [f'{atom_labels[ind]}\t' + '\t'.join(map(str, row)) for ind, row in enumerate(coord)]) + '\n'
+            f.write(array_string)
+
+
+def mesh_grid(grids):
+    meshed_grids = np.meshgrid(*grids, indexing='ij')
+    grid_points = np.column_stack([axis.flatten() for axis in meshed_grids])
+    return grid_points
+
+
+def fit_gpr(v, qmins, qmaxs, ngrids_train, ngrids_interp, **kwargs):
+
+    ndof = len(qmins)
+    q_train = grids.direct_product_grid(qmins, qmaxs, ngrids_train, ndof=ndof)
+    q_pred = grids.direct_product_grid(qmins, qmaxs, ngrids_interp, ndof=ndof)
+    kernel = RBF(length_scale=kwargs['length_scale'], length_scale_bounds=kwargs['length_scale_bounds'])
+    v_pred, v_std, gp = pot.fit_potential(q_train, q_pred, v, ndof, kernel)
+    print(f'opt. length scale: {gp.kernel_.length_scale}')
+    print(f'max std. dev.: {np.max(v_std)}')
+    return v_pred
+
+def interpolate(v_train, q_train, q_pred):
+    v_pred = RBFInterpolator(q_train, v_train)(q_pred)
+    return v_pred
+
+
+def run_full_dvr(wdir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops=True):
+    solvers = {'cm_dvr': colbert_miller, 'sine_dvr': sine_dvr, 'A116': algorithm_116}
+    solver = solvers.get(solver_name)
+    if solver_name == 'sine_dvr':
+        ngrid_prod = np.prod(nbases)
+        pot_size = tuple(nbases)
     else:
-        plt.xlabel('$N_{\mathrm{grid}} (2^n)$')
-    plt.ylabel('$\Delta v$')
-    fig.savefig(f'{wdir}/{solver_name}_convergence.png')
+        ngrid_prod = np.prod(ngrids)
+        pot_size = tuple(ngrids)
+        nbases = None
 
-
-def full_cmdvr(q_grids, v, neig):
-    masses = [1, 1, 1]
-    calculator = dvr.Calculator(colbert_miller)
-    exact_energies, exact_wfs = calculator.solve_nd(q_grids, masses, v, neig, ndim=3)
-    exact_energies *= AU2WAVNUM
-    return exact_energies
-
-
-def full_dvr(q_grids, v, neig, solver):
-    masses = [1, 1, 1]
-    ngrid = len(q_grids[0])
-    calculator = dvr.Calculator(solver)
-    exact_energies, exact_wfs = calculator.solve_nd(q_grids, masses, v, neig, ndim=3)
-    v = v.reshape(ngrid, ngrid, ngrid)
-    exact_energies, exact_wfs = wfu.evaluate_energies(exact_wfs, q_grids, v, masses, neig, ndim=3, normalise=True)
-    exact_energies *= AU2WAVNUM
-    return exact_energies
-
-
-def run_full_dvr(wdir, v, q_grids, solver_name, neig):
-    """ run DVR on the whole 3D H2O potential in normal coordinates. """
+    masses = np.array([1, 1, 1])
+    ndims = 3
+    wdir = f'{wdir}/ngrid_{ngrid_prod}'
     if not os.path.exists(wdir):
         os.makedirs(wdir)
-    if solver_name == 'cm_dvr':
-        exact_energies = full_cmdvr(q_grids, v, neig)
-    else:
-        solver = algorithms[solver_name]
-        exact_energies = full_dvr(q_grids, v, neig, solver)
+
+    q_grids = []
+    for d in range(ndims):
+        q_grids.append(np.linspace(q_mins[d], q_maxs[d], ngrids[d]))
+
+    calc = dvr.Calculator(solver, use_operators=use_ops)
+    exact_energies, wfs = calc.solve_nd(q_grids, masses, v, neig, nbases, ndim=ndims)
+    if solver_name != 'cm_dvr' and solver_name != 'sine_dvr':
+        v = v.reshape(*pot_size)
+        exact_energies, exact_wfs = wfu.evaluate_energies(wfs, q_grids, v, masses, neig, ndim=ndims, normalise=True)
+
     np.savetxt(f'{wdir}/{solver_name}_energies.txt', exact_energies)
     tranistion_energies = exact_energies - exact_energies[0]
-    tranistion_energies = tranistion_energies[1:]
+    tranistion_energies = tranistion_energies[1:] * AU2WAVNUM
     np.savetxt(f'{wdir}/{solver_name}_transitions.txt', tranistion_energies)
     return tranistion_energies
 
 
-def dvr_exact_pot(solver_name):
-    ngrids = [21, 31, 41, 51, 61, 71]
-    neig = 20
-    qmins = [-50, -30, -25]
-    qmaxs = [50, 20, 25]
-    #qmins = [-80, -50, -30]
-    #qmaxs = [70, 25, 30]
-
-    tot_grids = len(ngrids)
-    transitions_all = np.zeros((tot_grids, neig-1))
-    transitions_error = np.zeros((tot_grids, neig-1))
-    exp_transitions = np.genfromtxt('./results/exp_transitions.txt')[:neig-1]
-    for i, ngrid in enumerate(ngrids):
-        q0 = np.linspace(qmins[0], qmaxs[0], ngrid)
-        q1 = np.linspace(qmins[1], qmaxs[1], ngrid)
-        q2 = np.linspace(qmins[2], qmaxs[2], ngrid)
-        q_grids = [q0, q1, q2]
-        input_dir = f'./inputs/ngrid_{ngrid}'
-        v = np.genfromtxt(f'{input_dir}/exact_potential.txt')
-        out_dir = f'./results/exact_pot/ngrid_{ngrid}'
-        te = run_full_dvr(out_dir, v, q_grids, solver_name, neig)
-        transitions_all[i, :] = te
-        transitions_error[i, :] = np.abs(te - exp_transitions)
-    np.savetxt(f'./results/exact_pot/{solver_name}_exact_transitions.txt', transitions_all)
-    np.savetxt(f'./results/exact_pot/{solver_name}_transitions_error.txt', transitions_error, fmt='%.2f')
-    plot_transition_convergence('./results/exact_pot', solver_name, ngrids, neig-1)
-    print('done all calculations')
-    breakpoint()
-
-
-def dvr_gpr_pot(solver_name, ngrid):
-    neig = 14
-    exponents = [8, 9, 10, 11]
-    qmins = [-50, -30, -25]
-    qmaxs = [50, 20, 25]
-
-    tot_grids = len(exponents)
-    transitions_all = np.zeros((tot_grids, neig-1))
-    transitions_error = np.zeros((tot_grids, neig-1))
-    exp_transitions = np.genfromtxt('./results/exp_transitions.txt')[:neig-1]
-    for i, exponent in enumerate(exponents):
-        q0 = np.linspace(qmins[0], qmaxs[0], ngrid)
-        q1 = np.linspace(qmins[1], qmaxs[1], ngrid)
-        q2 = np.linspace(qmins[2], qmaxs[2], ngrid)
-        q_grids = [q0, q1, q2]
-        input_dir = f'./inputs/gpr/exact_ngrid_{ngrid}/2pow{exponent}'
-        v = np.genfromtxt(f'{input_dir}/predicted_potential.txt')
-        out_dir = f'./results/gpr_pot/ngrid_{ngrid}/2pow{exponent}'
-        te = run_full_dvr(out_dir, v, q_grids, solver_name, neig)
-        transitions_all[i, :] = te
-        transitions_error[i, :] = np.abs(te - exp_transitions)
-    np.savetxt(f'./results/gpr_pot/ngrid_{ngrid}/{solver_name}_pred_transitions.txt', transitions_all)
-    np.savetxt(f'./results/gpr_pot/ngrid_{ngrid}/{solver_name}_transitions_error.txt', transitions_error, '%.2f')
-    plot_transition_convergence(f'./results/gpr_pot/ngrid_{ngrid}', solver_name, exponents, neig-1, exact=False)
-    print('done all calculations')
-    breakpoint()
-
-
 if __name__ == "__main__":
-    #solver = 'A116'
-    solver = 'cm_dvr'
-    #dvr_exact_pot(solver)
-    dvr_gpr_pot(solver, ngrid=21)
+
+
+    pot_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot/sine_dvr'
+    out_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot/sine_dvr'
+
+    solver_name = 'sine_dvr'
+    use_ops = True
+
+    neig = 20
+    ngrids = np.array([81, 61, 61])
+    nbases = np.array([41, 31, 31]) # only matters if solver_name == 'sine_dvr'
+    q_mins = np.array([-65, -35, -25])
+    q_maxs = np.array([55, 20, 25])
+
+    natoms = 3
+    ndims = 3
+    variable_modes = np.array([0, 1, 2])
+    labels = ['O', 'H', 'H']
+    masses = np.array([15.999, 1.008, 1.008])
+
+    # Partridge-Schwenke minima in Ang
+    eq_coords = np.array([[0.00, 0.00, 0.00],
+                          [0.95865, 0.00, 0.00],
+                          [-0.237556, 0.928750, 0.00]])
+
+    eq_coords *= (1 / BOHR)
+
+
+    if solver_name == 'sine_dvr':
+        ngrid_prod = np.prod(nbases)
+
+    else:
+        ngrid_prod = np.prod(ngrids)
+
+    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/exact_potential.txt')
+
+    run_full_dvr(out_dir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
+    breakpoint()
