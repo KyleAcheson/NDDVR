@@ -85,6 +85,9 @@ def HEG_procedure(grid: npt.NDArray, x_min: float, x_max: float, nbasis: int, ba
     else:
         quad_points = eigvals  # otherwise quadrature points are just the eigenvalues
 
+    if np.argmin(quad_points) != 0:
+        quad_points = np.flipud(quad_points)
+
     return quad_points, tmat
 
 
