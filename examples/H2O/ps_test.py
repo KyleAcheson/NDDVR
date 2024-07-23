@@ -62,7 +62,11 @@ def interpolate(v_train, q_train, q_pred):
 
 
 def run_full_dvr(wdir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops=True):
-    solvers = {'cm_dvr': colbert_miller, 'sine_dvr': sine_dvr, 'A116': algorithm_116}
+    solvers = {
+        'cm_dvr': colbert_miller, 'sine_dvr': sine_dvr, 'A116': algorithm_116,
+        'A21': algorithm_21, 'A29': algorithm_29, 'A33': algorithm_33, 'A85': algorithm_85,
+        'A116b': algorithm_116b, 'A139': algorithm_139, 'A152': algorithm_152, 'A175': algorithm_175
+    }
     solver = solvers.get(solver_name)
     if solver_name == 'sine_dvr':
         ngrid_prod = np.prod(nbases)
@@ -97,15 +101,16 @@ def run_full_dvr(wdir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use
 
 if __name__ == "__main__":
 
+    pot_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot'
+    out_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot'
 
-    pot_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot/sine_dvr'
-    out_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot/sine_dvr'
-
-    solver_name = 'sine_dvr'
+    solver_names = ['A116', 'A21', 'A29', 'A33',
+                    'A85', 'A116b', 'A139', 'A152', 'A175']
     use_ops = True
 
     neig = 20
-    ngrids = np.array([81, 61, 61])
+    ngrids = np.array([41, 31, 31]) # for all other dvrs
+    #ngrids = np.array([81, 61, 61]) # for sine_dvr grid
     nbases = np.array([41, 31, 31]) # only matters if solver_name == 'sine_dvr'
     q_mins = np.array([-65, -35, -25])
     q_maxs = np.array([55, 20, 25])
@@ -123,14 +128,14 @@ if __name__ == "__main__":
 
     eq_coords *= (1 / BOHR)
 
+    for solver_name in solver_names:
 
-    if solver_name == 'sine_dvr':
-        ngrid_prod = np.prod(nbases)
+        if solver_name == 'sine_dvr':
+            ngrid_prod = np.prod(nbases)
 
-    else:
-        ngrid_prod = np.prod(ngrids)
+        else:
+            ngrid_prod = np.prod(ngrids)
 
-    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/exact_potential.txt')
+        v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/exact_potential.txt')
 
-    run_full_dvr(out_dir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
-    breakpoint()
+        run_full_dvr(out_dir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
