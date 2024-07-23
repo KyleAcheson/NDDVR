@@ -50,7 +50,11 @@ def fit_gpr(v, qmins, qmaxs, ngrids_train, ngrids_interp, **kwargs):
 
 
 def run_full_dvr(wdir, v, qmins, qmaxs, ngrids, nbases, neig, solver_name, use_ops=True):
-    solvers = {'cm_dvr': colbert_miller, 'sine_dvr': sine_dvr, 'A116': algorithm_116}
+    solvers = {
+        'cm_dvr': colbert_miller, 'sine_dvr': sine_dvr, 'A116': algorithm_116,
+        'A21': algorithm_21, 'A29': algorithm_29, 'A33': algorithm_33, 'A85': algorithm_85,
+        'A116b': algorithm_116b, 'A139': algorithm_139, 'A152': algorithm_152, 'A175': algorithm_175
+    }
     solver = solvers.get(solver_name)
     if solver_name == 'sine_dvr':
         ngrid_prod = np.prod(nbases)
@@ -87,15 +91,16 @@ if __name__ == "__main__":
     pot_dir = f'/home/kyle/DVR_Applications/NO2/ND_dvr'
     out_dir = f'/home/kyle/DVR_Applications/NO2/ND_dvr/results'
 
-    solver_name = 'sine_dvr'
+    solver_names = ['A116', 'A21', 'A29', 'A33',
+                    'A85', 'A116b', 'A139', 'A152', 'A175']
     use_ops = True
 
     neig = 20
-    ngrids = np.array([81, 61, 61])
-    nbases = np.array([41, 31, 31])
-    nbases_pred = np.array([51, 31, 31])
-    q_mins = np.array([-70, -45, -30])
-    q_maxs = np.array([70, 35, 30])
+    ngrids = np.array([41, 31, 31]) # for all other dvrs
+    #ngrids = np.array([81, 61, 61]) # for sine_dvr
+    nbases = np.array([41, 31, 31]) # only matters for sine_dvr
+    q_mins = np.array([-80, -50, -40])
+    q_maxs = np.array([80, 40, 40])
 
     natoms = 3
     variable_modes = np.array([0, 1, 2])
@@ -109,11 +114,12 @@ if __name__ == "__main__":
 
     eq_coords *= (1 / BOHR)
 
-    if solver_name == 'sine_dvr':
-        ngrid_prod = np.prod(nbases)
+    for solver_name in solver_names:
+        if solver_name == 'sine_dvr':
+            ngrid_prod = np.prod(nbases)
 
-    else:
-        ngrid_prod = np.prod(ngrids)
+        else:
+            ngrid_prod = np.prod(ngrids)
 
-    v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/exact_potential.txt')
-    run_full_dvr(out_dir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
+        v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/energies_raw.txt')
+        run_full_dvr(out_dir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
