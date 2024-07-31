@@ -172,12 +172,12 @@ if __name__ == "__main__":
     # Otherwise, the potential is evaluated directly on the direct product
     # grid defined by the product of ngrids points.
 
-    get_quad = True
+    get_quad = False
     
-    ngrids = np.array([81, 61, 61])
+    ngrids = np.array([21, 21, 21])
     nbases = np.array([41, 31, 31])
-    q_mins = np.array([-70, -45, -35])
-    q_maxs = np.array([70, 35, 35])
+    q_mins = np.array([-90, -60, -45])
+    q_maxs = np.array([90, 50, 45])
     variable_modes = np.array([0, 1, 2])
 
     natoms = 3
@@ -190,6 +190,6 @@ if __name__ == "__main__":
                           [-0.830153, 0.855256, 0.00]])
 
     hessian = pyscf_freq(labels, masses, eq_coords, xc='B3LYP', basis='def2-tzvp', units='Angstrom')
-    #generate_ncoords(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, xc='B3LYP', basis='def2-tzvp')
-    generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases, get_quad=get_quad)
+    generate_ncoords(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, xc='B3LYP', basis='def2-tzvp')
+    #generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases, get_quad=get_quad)
     breakpoint()

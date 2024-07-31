@@ -99,8 +99,8 @@ if __name__ == "__main__":
     ngrids = np.array([41, 31, 31]) # for all other dvrs
     #ngrids = np.array([81, 61, 61]) # for sine_dvr
     nbases = np.array([41, 31, 31]) # only matters for sine_dvr
-    q_mins = np.array([-80, -50, -40])
-    q_maxs = np.array([80, 40, 40])
+    q_mins = np.array([-90, -60, -45])
+    q_maxs = np.array([90, 50, 45])
 
     natoms = 3
     variable_modes = np.array([0, 1, 2])
