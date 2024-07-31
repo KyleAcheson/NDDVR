@@ -74,10 +74,14 @@ def generate_ncoords(outdir, coords, masses, hessian, variable_modes, qmins, qma
     plt.savefig(f'{outdir}/pot_1d_cuts.png')
     plt.show()
 
-def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmins, qmaxs, ngrids, nbases, get_quad=False):
+def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmins, qmaxs, ngrids, nbases, get_quad=False, grid_type='product'):
     if get_quad:
         ngrid_prod = np.prod(nbases)
-    else:
+    elif get_quad and grid_type == 'sobol':
+        raise TypeError
+    elif grid_type == 'sobol' and not get_quad:
+        ngrid_prod = ngrids # if sobol - ngrids is just the integer number of sobol sampling points
+    elif grid_type == 'product' and not get_quad:
         ngrid_prod = np.prod(ngrids)
     outdir = f'{wdir}/ngrid_{ngrid_prod}'
     if not os.path.exists(outdir):
@@ -87,9 +91,6 @@ def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmin
     variable_modes = np.array(variable_modes)
     inds = variable_modes + 6
 
-    q_grids = []
-    for i in range(ndof):
-        q_grids.append(np.linspace(qmins[i], qmaxs[i], ngrids[i]))
 
     fconsts, tmat = tf._diag_hessian(hessian, masses)
     freqs = np.lib.scimath.sqrt(fconsts)  # in a.u.
@@ -97,12 +98,15 @@ def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmin
     print(freqs_wavenums[-3:])
 
     if get_quad:
+        q_grids = []
+        for i in range(ndof):
+            q_grids.append(np.linspace(qmins[i], qmaxs[i], ngrids[i]))
         q_prod = grids.get_quadrature_points(q_grids, qmins, qmaxs, nbases, ('sine', get_pib_basis))
         q_prod = np.concatenate([np.zeros((ngrid_prod, 6)), q_prod], axis=1)
         cart_coords_prod = tf.norm2cart_grid(q_prod[0:1, :], coords, masses, tmat)  # for JIT compilation
         cart_coords_prod = tf.norm2cart_grid(q_prod, coords, masses, tmat)
     else:
-        q_prod = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrids, grid_type='product')
+        q_prod = grids.generate_grid(tmat, qmins, qmaxs, variable_modes, ngrids, grid_type=grid_type)
         cart_coords_prod = tf.norm2cart_grid(q_prod[0:1, :], coords, masses, tmat)  # for JIT compilation
         cart_coords_prod = tf.norm2cart_grid(q_prod, coords, masses, tmat)
 
@@ -116,7 +120,7 @@ def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmin
 
 
 if __name__ == "__main__":
-    out_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot/sine_dvr'
+    out_dir = '/home/kyle/DVR_Applications/H2Oc/sobol'
 
     # If get_quad == True - diagonalises the position operator defined on
     # a direct product grid according to ngrids. This yields a sine DVR
@@ -124,11 +128,14 @@ if __name__ == "__main__":
     # Otherwise, the potential is evaluated directly on the direct product
     # grid defined by the product of ngrids points.
 
-    get_quad = True
-    ngrids = np.array([81, 61, 61])
-    nbases = np.array([41, 31, 31])
-    q_mins = np.array([-65, -35, -25])
-    q_maxs = np.array([55, 20, 25])
+    get_quad = False
+    grid_type = 'sobol'
+
+    #ngrids = np.array([81, 61, 61])
+    ngrids = 2**10 # if sobol - ngrids is an integer power of 2
+    nbases = np.array([81, 61, 61])
+    q_mins = np.array([-80, -50, -30])
+    q_maxs = np.array([70, 25, 30])
     variable_modes = np.array([0, 1, 2])
 
     natoms = 3
@@ -144,5 +151,5 @@ if __name__ == "__main__":
 
     hessian = pot.partridge_schwenke_hessian()
     #generate_ncoords(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids)
-    generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases, get_quad=get_quad)
+    generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases, get_quad=get_quad, grid_type=grid_type)
     breakpoint()
