@@ -101,19 +101,19 @@ def run_full_dvr(wdir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use
 
 if __name__ == "__main__":
 
-    pot_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot'
-    out_dir = '/home/kyle/DVR_Applications/H2Ob/part_schwenke/whole_pot'
+    pot_dir = '/home/kyle/DVR_Applications/H2Oc/sobol/exp8'
+    out_dir = '/home/kyle/DVR_Applications/H2Oc/sobol/exp8'
 
-    solver_names = ['A116', 'A21', 'A29', 'A33',
+    solver_names = ['cm_dvr', 'A116', 'A21', 'A29', 'A33',
                     'A85', 'A116b', 'A139', 'A152', 'A175']
     use_ops = True
 
     neig = 20
-    ngrids = np.array([41, 31, 31]) # for all other dvrs
+    ngrids = np.array([81, 61, 61])
     #ngrids = np.array([81, 61, 61]) # for sine_dvr grid
     nbases = np.array([41, 31, 31]) # only matters if solver_name == 'sine_dvr'
-    q_mins = np.array([-65, -35, -25])
-    q_maxs = np.array([55, 20, 25])
+    q_mins = np.array([-80, -50, -30])
+    q_maxs = np.array([70, 25, 30])
 
     natoms = 3
     ndims = 3
