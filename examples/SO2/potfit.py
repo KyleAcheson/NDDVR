@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from pyscf import gto, hessian, dft
 from pyscf.hessian.thermo import harmonic_analysis
 from sklearn.gaussian_process.kernels import RBF
+from scipy.spatial.distance import cdist
 
 ELEC_MASS = 9.10938356E-31
 AU2EV = 27.2114
@@ -182,7 +183,7 @@ def pyscf_freq(labels, masses, coords, **kwargs):
 
 if __name__ == "__main__":
 
-    out_dir = '/storage/chem/msszxt/Orca_Calculations/SO2/whole_pot_tzvp/sobol'
+    out_dir = '/home/kyle/DVR_Applications/SO2/whole_pot/sobol/exp10'
 
     # If get_quad == True - diagonalises the position operator defined on
     # a direct product grid according to ngrids. This yields a sine DVR
@@ -191,7 +192,7 @@ if __name__ == "__main__":
     # grid defined by the product of ngrids points.
 
     get_quad = False
-    fit_sobol = False
+    fit_sobol = True
     grid_type = 'sobol'
     
     variable_modes = np.array([0, 1, 2])
@@ -213,13 +214,13 @@ if __name__ == "__main__":
     hessian = pyscf_freq(labels, masses, eq_coords, xc='B3LYP', basis='def2-tzvp', units='Angstrom')
     #generate_ncoords(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, xc='B3LYP', basis='def2-tzvp')
     if fit_sobol:
-        ngrid_prod = np.prod(ngrids)
-        v_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/exact_potential.txt')
-        q_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/exact_grid.txt')
+        v_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/sobol_potential.txt')
+        q_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/sobol_grid.txt')
         q_pred = grids.direct_product_grid(q_mins, q_maxs, ngrids, ndof=3)
-        v = fit_potential(v_train, q_train, q_pred, length_scale=15, length_scale_bounds=(2, 30))
-        np.savetxt(f'{out_dir}/ngrid_{ngrid_prod}/exact_grid.txt', q_pred)
-        np.savetxt(f'{out_dir}/ngrid_{ngrid_prod}/exact_potential.txt', v)
+        v = fit_potential(v_train, q_train, q_pred, length_scale=25, length_scale_bounds=(1e-2, 2e2))
+        np.savetxt(f'{out_dir}/ngrid_{nsobol}/exact_grid.txt', q_pred)
+        np.savetxt(f'{out_dir}/ngrid_{nsobol}/exact_potential.txt', v)
 
     else:
-        generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases, get_quad=get_quad)
+        generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases,
+                                 get_quad=get_quad, grid_type=grid_type, nsobol=nsobol)

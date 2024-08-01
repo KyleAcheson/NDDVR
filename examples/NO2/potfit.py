@@ -182,7 +182,8 @@ def pyscf_freq(labels, masses, coords, **kwargs):
 
 if __name__ == "__main__":
 
-    out_dir = '/storage/chem/msszxt/Orca_Calculations/NO2/whole_pot_tzvp/sobol'
+    #out_dir = '/storage/chem/msszxt/Orca_Calculations/NO2/whole_pot_tzvp/sobol'
+    out_dir = '/home/kyle/DVR_Applications/NO2/whole_pot/sobol/exp10'
     
     # If get_quad == True - diagonalises the position operator defined on
     # a direct product grid according to ngrids. This yields a sine DVR
@@ -191,7 +192,7 @@ if __name__ == "__main__":
     # grid defined by the product of ngrids points.
 
     get_quad = False
-    fit_sobol = False
+    fit_sobol = True
     grid_type = 'sobol'
     
     ngrids = np.array([41, 31, 31])
@@ -215,12 +216,12 @@ if __name__ == "__main__":
     
     if fit_sobol:
         ngrid_prod = np.prod(ngrids)
-        v_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/exact_potential.txt')
-        q_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/exact_grid.txt')
+        v_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/sobol_potential.txt')
+        q_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/sobol_grid.txt')
         q_pred = grids.direct_product_grid(q_mins, q_maxs, ngrids, ndof=3)
-        v = fit_potential(v_train, q_train, q_pred, length_scale=15, length_scale_bounds=(2, 30))
-        np.savetxt(f'{out_dir}/ngrid_{ngrid_prod}/exact_grid.txt', q_pred)
-        np.savetxt(f'{out_dir}/ngrid_{ngrid_prod}/exact_potential.txt', v)
+        v = fit_potential(v_train, q_train, q_pred, length_scale=25, length_scale_bounds=(1e-2, 1e2))
+        np.savetxt(f'{out_dir}/ngrid_{nsobol}/exact_grid.txt', q_pred)
+        np.savetxt(f'{out_dir}/ngrid_{nsobol}/exact_potential.txt', v)
 
     else:
         generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases,
