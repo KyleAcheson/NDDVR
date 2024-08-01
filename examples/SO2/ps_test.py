@@ -88,10 +88,10 @@ def run_full_dvr(wdir, v, qmins, qmaxs, ngrids, nbases, neig, solver_name, use_o
 if __name__ == "__main__":
 
 
-    pot_dir = f'/home/kyle/DVR_Applications/SO2/ND_dvr'
-    out_dir = f'/home/kyle/DVR_Applications/SO2/ND_dvr/results/sine'
+    pot_dir = f'/home/kyle/DVR_Applications/SO2/whole_pot/sobol/exp10/ngrid_1024'
+    out_dir = f'/home/kyle/DVR_Applications/SO2/whole_pot/sobol/exp10/ngrid_1024'
 
-    solver_names = ['A116', 'A21', 'A29', 'A33',
+    solver_names = ['cm_dvr', 'A116', 'A21', 'A29', 'A33',
                     'A85', 'A116b', 'A139', 'A152', 'A175']
     use_ops = True
 
@@ -122,6 +122,6 @@ if __name__ == "__main__":
         else:
             ngrid_prod = np.prod(ngrids)
 
-        v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/energies_raw.txt')
+        v = np.genfromtxt(f'{pot_dir}/ngrid_{ngrid_prod}/exact_potential.txt')
 
         run_full_dvr(out_dir, v, q_mins, q_maxs, ngrids, nbases, neig, solver_name, use_ops)
