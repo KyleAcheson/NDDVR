@@ -3,6 +3,10 @@ from scipy import sparse
 
 
 
+# A MODULE CONTAINING PS DISCOVERED ALGORITHMS, NOTE THEY ONLY RETURN THE KEO CONTRIBUTION FOR A DOF.
+# MOST OF THESE CAN PROBABLY BE DELETED THE TWO IMPORTANT ALGORITHMS ARE CONTAINED IN THE paper_algorithms
+# DICTIONARY AND ARE 85 AND 139. THE OTHERS ARE KEPT IN AS THIS CODE WAS USED TO TEST THEM IN HIGHER DIMENSIONS.
+
 ########################
 # TRAINED ON RMS TFUNC #
 ########################
@@ -130,6 +134,7 @@ def algorithm_40(grid, mass, ng, hbar=1):
 
 
 def algorithm_85(grid, mass, ng, hbar=1):
+    # THIS IS ALGORITHM A1 IN https://doi.org/10.1021/acs.jctc.4c01312
     ng = len(grid)
     dx = grid[1] - grid[0]
     L = grid[-1] - grid[0]
@@ -156,6 +161,7 @@ def algorithm_116b(grid, mass, ng, hbar=1):
 
 
 def algorithm_139(grid, mass, ng, hbar=1):
+    # THIS IS ALGORITHM A2 IN https://doi.org/10.1021/acs.jctc.4c01312
     ng = len(grid)
     dx = grid[1] - grid[0]
     L = grid[-1] - grid[0]
@@ -327,17 +333,12 @@ def algorithm_197(grid, mass, ng, hbar=1):
     return sparse.csr_matrix(T_n)
 
 
-#rms_tfunc_nodx_N10_algorithms = {'A16': algorithm_16, 'A19': algorithm_19, 'A75': algorithm_75, 'A91': algorithm_91,
-#                                 'A124': algorithm_124, 'A129b': algorithm_129b, 'A132': algorithm_132, 'A140': algorithm_140,
-#                                 'A146': algorithm_146, 'A197': algorithm_197}
 rms_tfunc_nodx_N10_algorithms = {'A75': algorithm_75,'A124': algorithm_124, 'A132': algorithm_132, 'A140': algorithm_140,
                                  'A146': algorithm_146, 'A197': algorithm_197}
 
-#rms_tfunc_N10_algorithms = {'A116': algorithm_116, 'A129': algorithm_129, 'A152': algorithm_152, 'A175': algorithm_175,
-#                            'A131': algorithm_131}
 rms_tfunc_N10_algorithms = {'A116': algorithm_116, 'A152': algorithm_152, 'A175': algorithm_175}
 
-#var_N10_algorithms = {'A21': algorithm_21, 'A29': algorithm_29, 'A33': algorithm_33, 'A40': algorithm_40, 'A85': algorithm_85,
-#                      'A116b': algorithm_116b, 'A139': algorithm_139, 'A187': algorithm_187, 'A200': algorithm_200}
 var_N10_algorithms = {'A21': algorithm_21, 'A29': algorithm_29, 'A33': algorithm_33, 'A85': algorithm_85,
                       'A116b': algorithm_116b, 'A139': algorithm_139}
+
+paper_algorithms = {'A1': algorithm_85, 'A2': algorithm_139}

@@ -13,6 +13,20 @@ def normalise_wf(wf, grid, neig, ndim=1):
 
 
 def evaluate_energies(wf, grid, v, mass, neig, ndim=1, normalise=False):
+    '''
+    Main function for evalutaing energies as a expection value of PS wfs. Note if using a PS
+    algorithm you must use this with the wfs obtained from the Calculator methods to obtain the energies.
+    Works for 1 or ND, just specify ndim accordingly.
+
+    :param wf: wfs obtained from Calculator - this is always [n, ndof] where n is the total number of grid points
+    :param grid: np.array of 1d grid points of list of arrays of grid points for each dof
+    :param v: potential evaluated on grid
+    :param mass: masses - 1
+    :param neig: number of eigenstates
+    :param ndim: number of dofs
+    :param normalise: True - renormalise wfs before computing energies.
+    :return: energies[neig], wf[n, ndof] (if normalise=True) OR energies[neig] if normalise=False
+    '''
 
     if normalise:
         wf = normalise_wf(wf, grid, neig, ndim)

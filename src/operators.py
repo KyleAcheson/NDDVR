@@ -3,9 +3,19 @@ from scipy import sparse
 from scipy.sparse.linalg import LinearOperator
 
 
+# A module defining LinearOperator types for custom matrix-vector product
+# computations when using iterative eigensolvers
+
 class Hamiltonian(LinearOperator):
 
     def __init__(self, v, kinetic_1d_mats, dims, dtype='float64'):
+        '''
+        Hamiltonian Operator. This constructs the Hamiltonian in terms of KE and PE operators. A direct
+        product representation in normal coordinates is assumed and the potential matrix is thus assumed diagonal.
+        :param v: potential as a flattened 1d array
+        :param kinetic_1d_mats: list of 2D arrays of pre-computed KE matrices for each independent DOF axis.
+        :param dims: number of DOFS
+        '''
         n = np.prod(dims)
         self.shape = (n, n)
         self.dtype = np.dtype(dtype)
@@ -131,7 +141,7 @@ def construct_hamiltonians(n, nd, full=False):
     kinetic_1d_mats = []
     for i in range(nd):
         grid = np.linspace(-5, 5, n)
-        kinetic_1d_mats.append(es.colbert_miller(grid, 1))
+        kinetic_1d_mats.append(es.colbert_miller(grid, 1, n))
         grids.append(grid)
 
     H_iter = Hamiltonian(pot, kinetic_1d_mats, dims)
@@ -152,8 +162,8 @@ if __name__ == "__main__":
     import fast_dvr.exact_solvers as es
     import timeit
     
-    n = 21
-    nds = [2, 3, 4, 5]
+    n = 3
+    nds = [3]
     nt = len(nds)
     neig = 1
     nr = 1
@@ -162,14 +172,12 @@ if __name__ == "__main__":
     ti = np.zeros(nt)
     for i in range(nt):
         H_iter = construct_hamiltonians(n, nds[i], full=False)
-        #x = np.random.rand(n**nds[i])
+        x = np.random.rand(n**nds[i])
+        time_matvec(H_iter, x)
         #t1 = min(timeit.repeat(lambda: time_matvec(H_iter, x), repeat=nr, number=1))
         #t1 = min(timeit.repeat(lambda: time_eigsh_full(H_full, neig), repeat=nr, number=1))
-        t2 = min(timeit.repeat(lambda: time_eigsh_full(H_iter, neig), repeat=nr, number=1))
+        #t2 = min(timeit.repeat(lambda: time_eigsh_full(H_iter, neig), repeat=nr, number=1))
         #tf[i] = t1
-        print(t2)
-        ti[i] = t2
 
-    print(ti)
 
     breakpoint()

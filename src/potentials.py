@@ -9,7 +9,21 @@ BOHR = 0.529177
 AU2EV = 27.2114
 AU2WAVNUM = 219474.63
 
+# module that contains several basic harmonic potentials up to 3D, an
+# interface to the NH3 AMMPOT4 potential, interface to the H2O Partridge-Scwhenke potential,
+# and a function to load custom potential from file.
+
 def load_potential(pot_file, grid_file, ndim, order):
+    '''
+    Load a potential and coordiante grid from file - works for ND potentials flattened.
+
+    :param pot_file: path to potential file - potential files first line must be a comment
+    :param grid_file: path to grid file. For example if 3D then cols [0, 1, 2] must be [x, y, z].
+                      Again the first line must be a comment.
+    :param ndim: number of DOFs
+    :param order: reshape potential into row ('C') or column ('F') order.
+    :return: pot[n_1, n_2, ... , n_k], grids (list of arrays of len(n_k)) with n_k the number of points for DOF k
+    '''
     pot = np.genfromtxt(pot_file, skip_header=1)
     grids, grid_sizes = [], []
     for i in range(ndim):
@@ -130,7 +144,7 @@ def _hessian(eq_coords, potential_function, epsilon=0.001):
     epsilon *= (1 / BOHR)
     x = eq_coords.flatten()
     hess = np.zeros((n, n))
-    for i in range(n): # a mess I know
+    for i in range(n): # a mess I know - fix this
         for j in range(n):
             x_plus_delta = x.copy()
             x_plus_delta[i] += epsilon

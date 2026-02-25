@@ -10,9 +10,20 @@ LIGHT_SPEED_SI = 299792458
 
 AU2Hz = ((HARTREE2J / (ATOMIC_MASS * BOHR_SI ** 2)) ** 0.5 / (2 * np.pi))
 
+# A module to transform betwen normal coordinates and Cartesians and back.
+# NOTE THAT HERE THE FUNCTIONS THAT TRANSFORM BETWEEN COORDINATES REQUIRE MASSES IN A.U.!!
 
 @njit
 def norm2cart_grid(qcoordinates, eq_coordinates, masses, transformation_matrix):
+    ''' Transform a ND dimensional grid of normal coordinates to Cartesians.
+        This requires a pre-computed transformation matrix obtained by diagonlising the
+        mass-weighted Hessian using get_normal_modes or _diag_hessian.
+
+        :param qcoordinates - [N, num. DOFs] with N the total number of direct product grid points.
+        :param eq_coordinates - optimised equilibrium coordinates
+        :param masses in au e.g. 1833.3516 for Hydrogen
+        :param transformation_matrix
+        '''
     ngrid_total, ndof = qcoordinates.shape
     natoms, _ = eq_coordinates.shape
     cartesian_coords = np.zeros((natoms, 3, ngrid_total))
@@ -21,12 +32,12 @@ def norm2cart_grid(qcoordinates, eq_coordinates, masses, transformation_matrix):
     return cartesian_coords
 
 @njit
-def cart2norm_grid(cartesian_potential, eq_coordinates, masses, transformation_matrix):
-    natoms, _, ngrid_total = cartesian_potential.shape
+def cart2norm_grid(cartesian_grid, eq_coordinates, masses, transformation_matrix):
+    natoms, _, ngrid_total = cartesian_grid.shape
     ndof_total = natoms * 3
     qcoordinates = np.zeros((ndof_total, ngrid_total))
     for i in range(ngrid_total):
-        qcoordinates[:, i] = cart2norm(cartesian_potential[:, :, i], eq_coordinates, masses, transformation_matrix)
+        qcoordinates[:, i] = cart2norm(cartesian_grid[:, :, i], eq_coordinates, masses, transformation_matrix)
     return qcoordinates
 
 
