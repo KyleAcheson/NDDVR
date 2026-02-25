@@ -1,0 +1,1 @@
+Subdirectory includes the partridge-schwenke potential evaluated on a sparse sobol grid of 2^8 points and then interpolated into a larger grid. The potential evaluated on the sobol points is not stored here as it can easily be evaluated using the partridge-schwenke wrapper in the code.

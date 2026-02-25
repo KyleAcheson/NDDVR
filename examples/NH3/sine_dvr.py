@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     POT_GEN = True
 
-    pot_dir = f'/home/kyle/DVR_Applications/NH3/sine_dvr/whole_pot/'
+    pot_dir = f'/home/kyle/DVR_Applications/NH3/sine_dvr/whole_pot/' # need editing
     out_dir = f'/home/kyle/DVR_Applications/NH3/sine_dvr/results/'
 
     neig = 9

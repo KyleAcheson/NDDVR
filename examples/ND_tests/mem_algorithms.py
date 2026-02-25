@@ -127,7 +127,7 @@ def test_mem_algorithms(wdir, x_min, x_max, ngrid, dims, algorithms, neig, ops=F
 
 if __name__ == "__main__":
 
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/ND_tests/memory/full_matrix'
+    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/ND_tests/memory/full_matrix' # edit this path to write outputs
 
     dims = [4]
     use_ops = False

@@ -158,10 +158,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    #pdir = '/storage/chem/msszxt/ND_Tests/potentials/3D'
-    #wdir = '/storage/chem/msszxt/ND_Tests/output/3D/N10_rms_tfunc/simple'
-    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/3D'
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/3D_tests/outputs'
+    pdir = '/home/kyle/PycharmProjects/NDDVR/data/potentials/3D'
+    wdir = '/home/kyle/PycharmProjects/NDDVR/data/potentials/3D/output'
 
     masses = [1, 1, 1]
     ndims = 3

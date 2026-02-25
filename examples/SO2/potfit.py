@@ -183,7 +183,7 @@ def pyscf_freq(labels, masses, coords, **kwargs):
 
 if __name__ == "__main__":
 
-    out_dir = '/home/kyle/DVR_Applications/SO2/whole_pot/sobol/exp10'
+    out_dir = '/home/kyle/PycharmProjects/NDDVR/data/potentials/SO2/whole_pot'
 
     # If get_quad == True - diagonalises the position operator defined on
     # a direct product grid according to ngrids. This yields a sine DVR
@@ -214,12 +214,12 @@ if __name__ == "__main__":
     hessian = pyscf_freq(labels, masses, eq_coords, xc='B3LYP', basis='def2-tzvp', units='Angstrom')
     #generate_ncoords(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, xc='B3LYP', basis='def2-tzvp')
     if fit_sobol:
-        v_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/sobol_potential.txt')
-        q_train = np.genfromtxt(f'{out_dir}/ngrid_{nsobol}/sobol_grid.txt')
+        v_train = np.genfromtxt(f'{out_dir}/sobol_potential.txt')
+        q_train = np.genfromtxt(f'{out_dir}/sobol_grid.txt')
         q_pred = grids.direct_product_grid(q_mins, q_maxs, ngrids, ndof=3)
         v = fit_potential(v_train, q_train, q_pred, length_scale=25, length_scale_bounds=(1e-2, 2e2))
-        np.savetxt(f'{out_dir}/ngrid_{nsobol}/exact_grid.txt', q_pred)
-        np.savetxt(f'{out_dir}/ngrid_{nsobol}/exact_potential.txt', v)
+        np.savetxt(f'{out_dir}/exact_grid.txt', q_pred)
+        np.savetxt(f'{out_dir}/exact_potential.txt', v)
 
     else:
         generate_whole_potential(out_dir, eq_coords, masses, hessian, variable_modes, q_mins, q_maxs, ngrids, nbases,

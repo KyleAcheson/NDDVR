@@ -142,8 +142,8 @@ def plot_results(wdir, pdir, ptypes, algorithms, neig, conv_thresh):
 
 if __name__ == "__main__":
 
-    pdir = '/home/kyle/PycharmProjects/Potential_Generator/potentials/variable_grids'
-    wdir = '/home/kyle/PycharmProjects/NDDVR/examples/2D_tests/outputs/operators/variable_grids'
+    pdir = '/home/kyle/PycharmProjects/NDDVR/data/potentials/variable_grids'
+    wdir = '/home/kyle/PycharmProjects/NDDVR/data/potentials/variable_grids/output'
 
     masses = [1, 1]
     ndims = 2

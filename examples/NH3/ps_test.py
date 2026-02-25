@@ -138,7 +138,7 @@ if __name__ == "__main__":
     solver = 'A116'
     #solver = colbert_miller
     #in_dir = '/home/kyle/DVR_Applications/NH3/inputs'
-    in_dir = '/home/kyle/DVR_Applications/NH3/ammpot4/d3h'
+    in_dir = '/home/kyle/DVR_Applications/NH3/ammpot4/d3h' # paths need editing
     #out_dir = '/home/kyle/DVR_Applications/NH3/results'
     out_dir = '/home/kyle/DVR_Applications/NH3/ammpot4/d3h_results'
     #run_dvr_1d(solver, in_dir, out_dir)

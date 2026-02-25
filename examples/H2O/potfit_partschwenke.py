@@ -140,7 +140,14 @@ def generate_whole_potential(wdir, coords, masses, hessian, variable_modes, qmin
 
 
 if __name__ == "__main__":
-    out_dir = '/home/kyle/DVR_Applications/H2Oc/sobol/exp8'
+    out_dir = '/home/kyle/PycharmProjects/data/potentials/H2O/whole_pot'# edit this path - it will write files there
+
+    # THIS FILE IS AN EXAMPLE OF HOW TO GENERATE A H2O POTENTIAL USING THE PARTRIDGE-SCWENKE POTENTIAL,
+    # THIS IS DONE BY GENERATING A NORMAL COORDINATE GRID USING FUNCTIONS FROM SRC/ AND THEN CALLING THE
+    # RELEVANT FORTRAN WRAPPER.
+
+    # IT WILL CURRENTLY WRITE THE FULL POTENTIAL IN THE NORMAL COORDINATES SPECIFIED BELOW TO FILE
+    # THIS CAN BE LARGE!!
 
     # If get_quad == True - diagonalises the position operator defined on
     # a direct product grid according to ngrids. This yields a sine DVR

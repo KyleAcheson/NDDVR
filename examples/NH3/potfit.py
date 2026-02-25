@@ -354,13 +354,15 @@ if __name__ == "__main__":
     #run_1d_test(out_dir)
     #run_exact_pot(out_dir)
 
+    # AN EXAMPLE OF GENERATING THE AMMONIA AMMPOT4 POTENTIAL
+
     variable_modes = np.array([0, 1, 2, 3, 4, 5])
     #variable_modes = np.array([0, 3])
     qmins = np.array([-80, -40, -40, -30, -20, -20])
     qmaxs = np.array([80, 40, 40, 20, 20, 20])
     ngrids = np.array([41, 21, 21, 21, 21, 21])
     ngrid_prod = np.prod(ngrids)
-    out_dir = f'/home/kyle/DVR_Applications/NH3/ammpot4_range_scans/S8/ngrid_{ngrid_prod}'
+    out_dir = f'/home/kyle/DVR_Applications/NH3/ammpot4_range_scans/S8/ngrid_{ngrid_prod}' # edit this path to write potential too
 
     labels = ['N', 'H', 'H', 'H']
     masses = np.array([25527.03399, 1833.3516, 1833.3516, 1833.3516])
@@ -372,48 +374,7 @@ if __name__ == "__main__":
 
     dh3_coords *= (1/BOHR)
 
-    #hess_eq = pyscf_freq(labels, eq_coords, basis='def2-svp', units='AU', xc='B3LYP')
-    #generate_ncoords(out_dir, eq_coords, hess_eq, variable_modes, qmins, qmaxs, ngrid_prod)
-    #hess_dh3 = pyscf_freq(labels, dh3_coords, basis='def2-svp', units='AU', xc='B3LYP')
     hess_dh3 = pot.ammpot4_hessian(dh3_minima=True)
-    #hess_dh3[:, [0, 6]] = hess_dh3[:, [6, 0]]
     generate_ncoords(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids)
-    variable_modes = np.array([0, 1])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '01')
-    variable_modes = np.array([0, 2])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '02')
-    variable_modes = np.array([0, 4])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '04')
-    variable_modes = np.array([0, 5])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '05')
-    variable_modes = np.array([1, 2])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '12')
-    variable_modes = np.array([1, 3])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '13')
-    variable_modes = np.array([1, 4])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '14')
-    variable_modes = np.array([1, 5])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '15')
-    variable_modes = np.array([2, 3])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '23')
-    variable_modes = np.array([2, 4])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '24')
-    variable_modes = np.array([2, 5])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '25')
-    variable_modes = np.array([3, 4])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '34')
-    variable_modes = np.array([3, 5])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '35')
-    variable_modes = np.array([4, 5])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '45')
-
-
-    variable_modes = np.array([0, 3])
-    c3v_min_vals = generate_2d_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, '03')
-    out_dir = f'{out_dir}/c3v_minima_scan'
     variable_modes = np.array([0, 1, 2, 3, 4, 5])
-    generate_ncoords_c3v(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrids, c3v_min_vals)
-    #generate_whole_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)
-
-
-    breakpoint()
+    generate_whole_potential(out_dir, dh3_coords, hess_dh3, variable_modes, qmins, qmaxs, ngrid_prod)

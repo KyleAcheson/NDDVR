@@ -126,7 +126,7 @@ def time_cmdvr(wdir, xmin, xmax, grid_size, ndims, neig, operators=False, nruns=
 
 if __name__ == "__main__":
 
-    wdir = '/storage/chem/msszxt/ND_Tests/output/ND_timings/matvec/timings/ngrid_21'
+    wdir = '/storage/chem/msszxt/ND_Tests/output/ND_timings/matvec/timings/ngrid_21' # edit path to write outputs
 
     CM_DVR = True
     op = True
